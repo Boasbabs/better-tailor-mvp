@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Confirm, FieldLabel, Icons, inputCls, useToast } from '../components/ui'
-import { FORM_URL, track } from '../lib'
+import { FORM_URL, trackWaitlist } from '../lib'
 import type { Currency } from '../types'
 
 const CURRENCIES: Currency[] = ['₦', '€', '$', '£', 'GH₵']
@@ -17,7 +17,7 @@ export default function Settings() {
   const [confirmReset, setConfirmReset] = useState(false)
 
   const openWaitlist = () => {
-    track('waitlist-click')
+    trackWaitlist('settings')
     window.open(FORM_URL, '_blank')
   }
 

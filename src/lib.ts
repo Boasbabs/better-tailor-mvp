@@ -138,10 +138,24 @@ declare global {
   }
 }
 
-export function track(path: 'opened' | 'engaged' | 'waitlist-click') {
+function count(path: string) {
   try {
     window.goatcounter?.count({ path, event: true })
   } catch {
     // analytics must never break the demo
   }
+}
+
+export function track(event: 'opened' | 'engaged' | 'waitlist-click') {
+  count(event)
+}
+
+export type WaitlistSource = 'orders' | 'customers' | 'invoices' | 'settings'
+
+// Fires the canonical funnel event *and* a per-surface breakdown. Keeping the
+// aggregate means the funnel number stays one row in GoatCounter instead of a
+// sum of four; the suffixed paths answer which surface actually converts.
+export function trackWaitlist(source: WaitlistSource) {
+  count('waitlist-click')
+  count(`waitlist-click/${source}`)
 }

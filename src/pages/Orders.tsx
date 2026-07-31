@@ -52,7 +52,7 @@ export default function Orders() {
         </div>
       </div>
 
-      <WaitlistBanner className="mt-3" />
+      <WaitlistBanner source="orders" className="mt-3" />
 
       {/* search + filters */}
       <div className="mt-4 relative">

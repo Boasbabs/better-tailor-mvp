@@ -19,7 +19,7 @@ export default function Customers() {
   return (
     <HomeShell active="customers">
       <HomeHeader />
-      <WaitlistBanner className="mb-4" />
+      <WaitlistBanner source="customers" className="mb-4" />
       <div className="relative">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30">{Icons.search()}</span>
         <input className={`${inputCls} pl-11`} placeholder="search customers…" value={q} onChange={(e) => setQ(e.target.value)} />

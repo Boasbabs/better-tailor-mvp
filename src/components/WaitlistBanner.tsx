@@ -1,15 +1,15 @@
 import { useStore } from '../store'
-import { FORM_URL, track } from '../lib'
+import { FORM_URL, trackWaitlist, type WaitlistSource } from '../lib'
 import { Icons } from './ui'
 
 // Shown at the top of every tab until dismissed — dismissing hides it app-wide.
-export function WaitlistBanner({ className = '' }: { className?: string }) {
+export function WaitlistBanner({ source, className = '' }: { source: WaitlistSource; className?: string }) {
   const dismissed = useStore((s) => s.bannerDismissed)
   const dismissBanner = useStore((s) => s.dismissBanner)
   if (dismissed) return null
 
   const open = () => {
-    track('waitlist-click')
+    trackWaitlist(source)
     window.open(FORM_URL, '_blank')
   }
 
