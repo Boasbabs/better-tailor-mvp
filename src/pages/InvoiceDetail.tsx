@@ -138,9 +138,9 @@ export default function InvoiceDetail() {
         {/* actions */}
         <button
           onClick={shareWhatsApp}
-          className="w-full bg-ok text-white rounded-full font-bold text-[15px] px-6 py-3.5 active:scale-95 transition flex items-center justify-center gap-2"
+          className="w-full bg-wa text-white rounded-full font-bold text-[15px] px-6 py-3.5 active:scale-95 transition flex items-center justify-center gap-2"
         >
-          {Icons.chat('w-5 h-5')} share on WhatsApp
+          {Icons.whatsapp('w-5 h-5')} share on WhatsApp
         </button>
         <button
           onClick={downloadPng}

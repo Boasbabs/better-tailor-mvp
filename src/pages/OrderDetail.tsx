@@ -10,6 +10,15 @@ import type { OrderStatus } from '../types'
 
 const STATUSES: OrderStatus[] = ['new', 'sewing', 'ready', 'delivered']
 
+// Solid counterparts of the status pill tints, so the stepper and the pills
+// read as the same colour language.
+const STEP_TONES: Record<OrderStatus, string> = {
+  new: 'bg-ink',
+  sewing: 'bg-[#3B4FD8]',
+  ready: 'bg-[#7139D4]',
+  delivered: 'bg-[#12764B]',
+}
+
 export default function OrderDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -85,14 +94,12 @@ export default function OrderDetail() {
                 <button
                   key={s}
                   onClick={() => setStatus(s)}
-                  className={`rounded-full py-2 text-[11px] font-bold lowercase transition active:scale-95 ${
+                  className={`rounded-full py-2 text-[11px] font-bold lowercase transition active:scale-95 text-white ${
                     isCurrent
-                      ? s === 'delivered'
-                        ? 'bg-ok text-white'
-                        : 'bg-ink text-white'
+                      ? STEP_TONES[s]
                       : done
-                        ? 'bg-card2 text-ink'
-                        : 'bg-card2 text-ink/35'
+                        ? 'bg-card2 !text-ink'
+                        : 'bg-card2 !text-ink/35'
                   }`}
                 >
                   {done ? '✓ ' : ''}

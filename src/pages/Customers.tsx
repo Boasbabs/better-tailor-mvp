@@ -50,10 +50,10 @@ export default function Customers() {
                     href={`https://wa.me/${waPhone(c.phone)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="w-10 h-10 rounded-full bg-ok text-white grid place-items-center active:scale-90 transition"
+                    className="w-10 h-10 rounded-full bg-wa text-white grid place-items-center active:scale-90 transition"
                     aria-label="whatsapp"
                   >
-                    {Icons.chat('w-4 h-4')}
+                    {Icons.whatsapp('w-[18px] h-[18px]')}
                   </a>
                 </>
               )}

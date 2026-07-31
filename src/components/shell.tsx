@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Icons, Sheet } from './ui'
+import { Icons, Sheet, TabIcon, type TabName } from './ui'
 
 export function Wordmark({ className = 'text-lg' }: { className?: string }) {
   return <span className={`font-display font-bold lowercase tracking-tight ${className}`}>better tailor</span>
 }
 
-export function HomeShell({ active, children }: { active: 'orders' | 'customers' | 'invoices'; children: ReactNode }) {
+export function HomeShell({ active, children }: { active: TabName; children: ReactNode }) {
   return (
     <div className="min-h-dvh">
       <div className="max-w-md mx-auto px-4 pt-5 pb-36">{children}</div>
@@ -19,8 +19,12 @@ export function HomeHeader() {
   return (
     <div className="flex items-center justify-between mb-4">
       <Wordmark />
-      <Link to="/settings" className="p-2 -mr-2 text-ink/70 active:scale-90 transition" aria-label="settings">
-        {Icons.gear('w-6 h-6')}
+      <Link
+        to="/settings"
+        className="w-10 h-10 rounded-full bg-card shadow-sm grid place-items-center text-ink/70 active:scale-90 transition"
+        aria-label="settings"
+      >
+        {Icons.gear('w-[22px] h-[22px]')}
       </Link>
     </div>
   )
@@ -58,19 +62,20 @@ export function SubShell({
   )
 }
 
-function Tab({ to, label, icon, active }: { to: string; label: string; icon: ReactNode; active: boolean }) {
+function Tab({ to, label, name, active }: { to: string; label: string; name: TabName; active: boolean }) {
   return (
     <Link
       to={to}
-      className={`flex flex-col items-center gap-0.5 px-2 pt-1 transition ${active ? 'text-ink' : 'text-ink/30'}`}
+      className={`flex flex-col items-center gap-1 py-1 transition ${active ? 'text-ink' : 'text-ink/35'}`}
+      aria-current={active ? 'page' : undefined}
     >
-      {icon}
-      <span className="text-[10px] font-bold lowercase">{label}</span>
+      <TabIcon name={name} active={active} />
+      <span className={`text-[10px] lowercase ${active ? 'font-bold' : 'font-semibold'}`}>{label}</span>
     </Link>
   )
 }
 
-export function TabBar({ active }: { active: 'orders' | 'customers' | 'invoices' }) {
+export function TabBar({ active }: { active: TabName }) {
   const [fabOpen, setFabOpen] = useState(false)
   const navigate = useNavigate()
   const go = (path: string) => {
@@ -79,18 +84,22 @@ export function TabBar({ active }: { active: 'orders' | 'customers' | 'invoices'
   }
   return (
     <>
-      <nav className="fixed bottom-0 inset-x-0 z-30">
-        <div className="max-w-md mx-auto bg-card rounded-t-3xl shadow-[0_-6px_24px_rgba(17,17,17,0.08)] flex items-center justify-around px-4 pt-2.5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <Tab to="/orders" label="orders" icon={Icons.shirt()} active={active === 'orders'} />
-          <Tab to="/customers" label="customers" icon={Icons.people()} active={active === 'customers'} />
+      {/* Three equal tabs; the + floats clear of the row so it reads as a primary
+          action rather than a fourth, oddly-shaped tab. */}
+      <nav className="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
+        <div className="max-w-md mx-auto relative">
           <button
             onClick={() => setFabOpen(true)}
-            aria-label="add"
-            className="w-14 h-14 -mt-9 rounded-full bg-ink text-white grid place-items-center shadow-lg active:scale-90 transition"
+            aria-label="create"
+            className="pointer-events-auto absolute right-5 -top-[4.5rem] w-14 h-14 rounded-full bg-ink text-white grid place-items-center shadow-[0_8px_24px_rgba(17,17,17,0.28)] active:scale-90 transition"
           >
             {Icons.plus()}
           </button>
-          <Tab to="/invoices" label="invoices" icon={Icons.receipt()} active={active === 'invoices'} />
+          <div className="pointer-events-auto bg-card rounded-t-3xl shadow-[0_-6px_24px_rgba(17,17,17,0.08)] grid grid-cols-3 px-2 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <Tab to="/orders" label="orders" name="orders" active={active === 'orders'} />
+            <Tab to="/customers" label="customers" name="customers" active={active === 'customers'} />
+            <Tab to="/invoices" label="invoices" name="invoices" active={active === 'invoices'} />
+          </div>
         </div>
       </nav>
 

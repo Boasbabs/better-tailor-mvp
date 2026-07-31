@@ -8,6 +8,7 @@
   --color-danger: #e5484d;
   --color-warn: #f5a623;
   --color-ok: #30a46c;
+  --color-wa: #25d366; /* official WhatsApp brand green */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
 }

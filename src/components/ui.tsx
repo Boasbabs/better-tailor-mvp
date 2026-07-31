@@ -61,7 +61,7 @@ export function PillButton({
     primary: 'bg-ink text-white',
     light: 'bg-card text-ink shadow-sm',
     danger: 'bg-danger/10 text-danger',
-    whatsapp: 'bg-ok text-white',
+    whatsapp: 'bg-wa text-white',
   }[variant]
   return (
     <button
@@ -75,35 +75,70 @@ export function PillButton({
 }
 
 // ---------- pills ----------
+// One badge recipe everywhere: soft tinted background + saturated same-hue text
+// + a leading dot. Solid fills are reserved for overdue — the only pill allowed
+// to shout, so it stays the loudest thing on the orders list.
+const PILL = 'inline-flex items-center gap-1.5 rounded-full pl-2 pr-2.5 py-1 text-[11px] font-bold'
+
+function Badge({ tone, dot, children }: { tone: string; dot: string; children: ReactNode }) {
+  return (
+    <span className={`${PILL} ${tone}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      {children}
+    </span>
+  )
+}
+
+const STATUS_TONES: Record<OrderStatus, { tone: string; dot: string }> = {
+  new: { tone: 'bg-ink/[0.06] text-ink/55', dot: 'bg-ink/30' },
+  sewing: { tone: 'bg-[#EAEEFF] text-[#3B4FD8]', dot: 'bg-[#3B4FD8]' },
+  ready: { tone: 'bg-[#F1EAFF] text-[#7139D4]', dot: 'bg-[#7139D4]' },
+  delivered: { tone: 'bg-[#E4F5EC] text-[#12764B]', dot: 'bg-[#12764B]' },
+}
+
 export function StatusPill({ status }: { status: OrderStatus }) {
-  const cls = {
-    new: 'bg-card2 text-ink',
-    sewing: 'bg-ink text-white',
-    ready: 'bg-white text-ink shadow-sm ring-1 ring-ink/10',
-    delivered: 'bg-ok/10 text-ok',
-  }[status]
-  return <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold lowercase ${cls}`}>{status}</span>
+  const { tone, dot } = STATUS_TONES[status]
+  return (
+    <Badge tone={`${tone} lowercase`} dot={dot}>
+      {status}
+    </Badge>
+  )
 }
 
 export function DuePill({ dueDate, delivered }: { dueDate?: string; delivered?: boolean }) {
-  if (delivered) return <span className="rounded-full px-2.5 py-1 text-[11px] font-bold bg-ok/10 text-ok">delivered ✓</span>
+  if (delivered)
+    return (
+      <Badge tone="bg-[#E4F5EC] text-[#12764B]" dot="bg-[#12764B]">
+        delivered
+      </Badge>
+    )
   const u = urgency(dueDate)
-  const cls =
+  const { tone, dot } =
     u === 'overdue'
-      ? 'bg-danger text-white'
+      ? { tone: 'bg-danger text-white', dot: 'bg-white' }
       : u === 'soon'
-        ? 'bg-warn/15 text-[#b17a08]'
-        : 'bg-card2 text-ink/50'
-  return <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{dueLabel(dueDate)}</span>
+        ? { tone: 'bg-[#FFF1DC] text-[#9A5B00]', dot: 'bg-[#E89100]' }
+        : { tone: 'bg-ink/[0.06] text-ink/45', dot: 'bg-ink/25' }
+  return (
+    <Badge tone={tone} dot={dot}>
+      {dueLabel(dueDate)}
+    </Badge>
+  )
+}
+
+const INVOICE_TONES: Record<InvoiceStatus, { tone: string; dot: string }> = {
+  paid: { tone: 'bg-[#E4F5EC] text-[#12764B]', dot: 'bg-[#12764B]' },
+  'part-paid': { tone: 'bg-[#FFF1DC] text-[#9A5B00]', dot: 'bg-[#E89100]' },
+  unpaid: { tone: 'bg-ink/[0.06] text-ink/55', dot: 'bg-ink/30' },
 }
 
 export function InvoicePill({ status }: { status: InvoiceStatus }) {
-  const cls = {
-    paid: 'bg-ok/10 text-ok',
-    'part-paid': 'bg-warn/15 text-[#b17a08]',
-    unpaid: 'bg-card2 text-ink/60',
-  }[status]
-  return <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{status}</span>
+  const { tone, dot } = INVOICE_TONES[status]
+  return (
+    <Badge tone={tone} dot={dot}>
+      {status}
+    </Badge>
+  )
 }
 
 export function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
@@ -234,7 +269,6 @@ export const Icons = {
       d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"
     />
   ),
-  chat: (c?: string) => <I className={c ?? 'w-5 h-5'} d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z" />,
   camera: (c?: string) => (
     <svg viewBox="0 0 24 24" className={c ?? 'w-6 h-6'} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -253,13 +287,65 @@ export const Icons = {
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   ),
-  shirt: (c?: string) => <I className={c ?? 'w-6 h-6'} d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" />,
-  people: (c?: string) => (
-    <svg viewBox="0 0 24 24" className={c ?? 'w-6 h-6'} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  shirt: (c?: string) => <TabIcon name="orders" active={false} className={c ?? 'w-6 h-6'} />,
+  people: (c?: string) => <TabIcon name="customers" active={false} className={c ?? 'w-6 h-6'} />,
+  receipt: (c?: string) => <TabIcon name="invoices" active={false} className={c ?? 'w-6 h-6'} />,
+  // Official WhatsApp glyph — used only to label WhatsApp actions.
+  whatsapp: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="currentColor" aria-hidden="true">
+      <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.66-2.06-.17-.3-.02-.46.13-.6.14-.14.3-.35.45-.53.15-.17.2-.3.3-.5.1-.19.05-.37-.03-.51-.07-.15-.66-1.61-.91-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.03 1.02-1.03 2.48s1.06 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.42-.08-.12-.27-.2-.57-.34M12.05 21.79h-.01c-1.77 0-3.51-.48-5.03-1.38l-.36-.22-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.43 9.89-9.88 9.89m8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.15 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.69 1.45c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.42" />
     </svg>
   ),
-  receipt: (c?: string) => <I className={c ?? 'w-6 h-6'} d="M4 2v20l2-1.5L8 22l2-1.5L12 22l2-1.5L16 22l2-1.5L20 22V2l-2 1.5L16 2l-2 1.5L12 2l-2 1.5L8 2 6 3.5 4 2zM8 8h8M8 12h8M8 16h5" />,
+}
+
+// ---------- tab icons ----------
+// Filled when active, outlined when not — the pattern Spotify/Tonal use, and
+// far more legible at 26px than relying on opacity alone.
+export type TabName = 'orders' | 'customers' | 'invoices'
+
+export function TabIcon({ name, active, className }: { name: TabName; active: boolean; className?: string }) {
+  const s = {
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.9,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  }
+  const solid = active ? 'currentColor' : 'none'
+  return (
+    <svg viewBox="0 0 24 24" className={className ?? 'w-[26px] h-[26px]'} aria-hidden="true">
+      {name === 'orders' && (
+        // garment hanger — reads as "tailoring" more clearly than a t-shirt
+        <>
+          <path {...s} d="M12 9.4V8.7a2.7 2.7 0 1 1 2.7-2.7" />
+          <path {...s} fill={solid} d="M12 9.4 4.15 15.3a1.8 1.8 0 0 0 1.1 3.24h13.5a1.8 1.8 0 0 0 1.1-3.24L12 9.4Z" />
+        </>
+      )}
+      {name === 'customers' && (
+        // back person first so the front silhouette overlaps it cleanly
+        <>
+          <circle {...s} fill={solid} cx="16.9" cy="8.2" r="2.5" />
+          <path {...s} d="M18.2 14.1a5.2 5.2 0 0 1 2.9 4.8" />
+          <circle {...s} fill={solid} cx="9.3" cy="8" r="3.3" />
+          <path {...s} fill={solid} d="M3.3 19.2a6.1 6.1 0 0 1 12.2 0Z" />
+        </>
+      )}
+      {name === 'invoices' && (
+        <>
+          <path
+            {...s}
+            fill={solid}
+            d="M5.7 3.5a1.2 1.2 0 0 1 1.2-1.2h10.2a1.2 1.2 0 0 1 1.2 1.2v17.1l-2.55-1.5-2.55 1.5-2.55-1.5-2.55 1.5L5.7 20.6V3.5Z"
+          />
+          <path
+            fill="none"
+            stroke={active ? '#FFFFFF' : 'currentColor'}
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            d="M9 8.3h6M9 12h6M9 15.7h3.2"
+          />
+        </>
+      )}
+    </svg>
+  )
 }

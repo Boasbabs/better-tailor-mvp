@@ -94,9 +94,9 @@ export default function CustomerDetail() {
               href={`https://wa.me/${waPhone(customer.phone)}`}
               target="_blank"
               rel="noreferrer"
-              className="bg-ok text-white rounded-full font-bold py-3 text-center text-sm active:scale-95 transition flex items-center justify-center gap-2"
+              className="bg-wa text-white rounded-full font-bold py-3 text-center text-sm active:scale-95 transition flex items-center justify-center gap-2"
             >
-              {Icons.chat('w-4 h-4')} whatsapp
+              {Icons.whatsapp('w-[18px] h-[18px]')} whatsapp
             </a>
           </div>
         )}
