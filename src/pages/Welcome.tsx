@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
-import { Icons, inputCls } from '../components/ui'
-import { track } from '../lib'
+import { FieldLabel, Icons, inputCls } from '../components/ui'
+import { CurrencyPicker } from '../components/CurrencyPicker'
+import { fmtMoney, track } from '../lib'
+import type { Currency } from '../types'
 
 function Feature({ icon, title, body }: { icon: ReactNode; title: string; body: string }) {
   return (
@@ -22,12 +24,16 @@ export default function Welcome() {
   const saveSettings = useStore((s) => s.saveSettings)
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState(settings.businessName)
+  const [currency, setCurrency] = useState<Currency>(settings.currency)
 
-  const finish = (businessName?: string) => {
+  const finish = ({ keepName }: { keepName: boolean }) => {
     // Small shops bank under their trading name, so seed both — otherwise the
     // invoice header and its "pay to" block disagree straight after onboarding.
-    const n = businessName?.trim()
-    if (n) saveSettings({ businessName: n, accountName: n })
+    const n = name.trim()
+    saveSettings({
+      currency,
+      ...(keepName && n ? { businessName: n, accountName: n } : {}),
+    })
     localStorage.setItem('bt_seen_welcome', '1')
     track('opened')
     navigate('/orders')
@@ -49,13 +55,11 @@ export default function Welcome() {
             make it yours
           </h1>
           <p className="mt-3 text-[15px] text-ink/55 font-medium leading-snug">
-            your shop name goes on every invoice you send. you can change it later in settings.
+            your shop name and currency go on every invoice you send. you can change both later in settings.
           </p>
 
           <div className="mt-7">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-ink/40 mb-1.5 ml-1">
-              your business name
-            </div>
+            <FieldLabel>your business name</FieldLabel>
             <input
               className={inputCls}
               placeholder="e.g. Golden Thread Stitches"
@@ -65,26 +69,31 @@ export default function Welcome() {
             />
           </div>
 
+          <div className="mt-5">
+            <FieldLabel>currency</FieldLabel>
+            <CurrencyPicker value={currency} onChange={setCurrency} />
+          </div>
+
           {/* live preview so the payoff is visible before they commit */}
           <div className="mt-5 bg-card rounded-2xl shadow-sm p-4">
             <div className="text-[10px] font-bold uppercase tracking-widest text-ink/35">invoice preview</div>
             <div className="mt-2 text-center">
               <div className="font-display font-bold lowercase truncate">{name.trim() || 'your shop name'}</div>
               <div className="text-[11px] text-ink/40 mt-2">BALANCE DUE</div>
-              <div className="font-display font-bold text-2xl">₦25,000</div>
+              <div className="font-display font-bold text-2xl">{fmtMoney(25000, currency)}</div>
             </div>
           </div>
         </div>
 
         <div>
           <button
-            onClick={() => finish(name)}
+            onClick={() => finish({ keepName: true })}
             className="w-full bg-ink text-white rounded-full font-bold text-lg py-4 active:scale-95 transition shadow-lg"
           >
             start
           </button>
           <button
-            onClick={() => finish()}
+            onClick={() => finish({ keepName: false })}
             className="w-full text-center text-sm font-bold text-ink/40 mt-3 py-2 active:scale-95 transition"
           >
             skip for now

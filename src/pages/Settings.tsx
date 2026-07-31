@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Confirm, FieldLabel, Icons, inputCls, useToast } from '../components/ui'
+import { CurrencyPicker } from '../components/CurrencyPicker'
 import { FORM_URL, trackWaitlist } from '../lib'
-import type { Currency } from '../types'
-
-const CURRENCIES: Currency[] = ['₦', '€', '$', '£', 'GH₵']
 
 export default function Settings() {
   const settings = useStore((s) => s.settings)
@@ -80,19 +78,7 @@ export default function Settings() {
         {/* currency */}
         <div>
           <h2 className="font-display font-bold lowercase mb-3">currency symbol</h2>
-          <div className="flex gap-1.5">
-            {CURRENCIES.map((c) => (
-              <button
-                key={c}
-                onClick={() => saveSettings({ currency: c })}
-                className={`rounded-full px-4 py-2.5 text-sm font-bold transition ${
-                  settings.currency === c ? 'bg-ink text-white' : 'bg-card text-ink/60 shadow-sm'
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <CurrencyPicker value={settings.currency} onChange={(c) => saveSettings({ currency: c })} />
           <p className="text-[11px] text-ink/35 mt-2 ml-1">display only — no conversion.</p>
         </div>
 
