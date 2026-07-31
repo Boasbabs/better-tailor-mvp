@@ -1,92 +1,38 @@
 import { useEffect, useState } from 'react'
 
-// Bundled style + fabric galleries. Photos are hotlinked from their sources,
-// so every render goes through SmartImage, which falls back to a neutral tile
-// if a host blocks us or the phone is offline.
+// Bundled style + fabric galleries. Photos ship in public/gallery/ rather than
+// being hotlinked, so they work on a weak signal or with no connection at all.
+// BASE_URL keeps them resolving under the /better-tailor-mvp/ GitHub Pages base.
 
 export type Style = { id: string; name: string; image: string }
 export type Fabric = { id: string; name: string; image: string }
 
+const img = (path: string) => `${import.meta.env.BASE_URL}gallery/${path}`
+
 export const STYLES: Style[] = [
-  {
-    id: 'agbada',
-    name: 'Agbada',
-    image: 'https://i.pinimg.com/736x/58/ba/01/58ba0131cf1ae3d77cb18572b559ef9a.jpg',
-  },
-  {
-    id: 'senator',
-    name: 'Senator',
-    image: 'https://i.pinimg.com/1200x/a7/a5/77/a7a5770e4353d1b24f2479b067cabec9.jpg',
-  },
-  {
-    id: 'kaftan',
-    name: 'Kaftan',
-    image: 'https://www.tradtrims.com/cdn/shop/files/DSC08667_-_Resize_900x.jpg?v=1774711071',
-  },
-  {
-    id: 'dashiki',
-    name: 'Dashiki',
-    image: 'https://i.pinimg.com/736x/21/d2/47/21d247ac55f69b98e204a0ccd55e2475.jpg',
-  },
-  {
-    id: 'shirt',
-    name: 'Shirt',
-    image: 'https://cdn2.propercloth.com/pic_cs/343259_fea3529b71eb8afbfa963d24d5e28838_size6.jpg',
-  },
-  {
-    id: 'trouser',
-    name: 'Trouser',
-    image: 'https://cdn2.propercloth.com/pic_tccp/c5d66128592d5e30eda85755c1363fb2_sizemax.jpg',
-  },
-  {
-    id: 'suit',
-    name: '2-pc Suit',
-    image:
-      'https://www.mysuittailor.com/cdn/shop/files/royal_blue_suit_4415ca86-d663-4a7d-b28d-b24bfd2fdae5.jpg?v=1752140888&width=600',
-  },
-  {
-    id: 'gown',
-    name: 'Gown',
-    image: 'https://www.jovani.com/wp-content/uploads/47812-brown-2.jpg',
-  },
+  { id: 'agbada', name: 'Agbada', image: img('styles/agbada.jpg') },
+  { id: 'senator', name: 'Senator', image: img('styles/senator.jpg') },
+  { id: 'kaftan', name: 'Kaftan', image: img('styles/kaftan.jpg') },
+  { id: 'dashiki', name: 'Dashiki', image: img('styles/dashiki.jpg') },
+  { id: 'shirt', name: 'Shirt', image: img('styles/shirt.jpg') },
+  { id: 'trouser', name: 'Trouser', image: img('styles/trouser.jpg') },
+  { id: 'suit', name: '2-pc Suit', image: img('styles/suit.jpg') },
+  { id: 'gown', name: 'Gown', image: img('styles/gown.jpg') },
 ]
 
 export const FABRICS: Fabric[] = [
-  {
-    id: 'adire-indigo',
-    name: 'Adire indigo',
-    image: 'https://i.pinimg.com/736x/d7/c1/2c/d7c12c297505574e35de1066a98db4e8.jpg',
-  },
-  {
-    id: 'ankara-sunset',
-    name: 'Ankara sunset',
-    image: 'https://i.pinimg.com/736x/d4/42/92/d44292d4daaadb6ba2e5f09fbbad9f38.jpg',
-  },
-  {
-    id: 'kente-gold',
-    name: 'Kente gold',
-    image: 'https://i.pinimg.com/736x/a3/e2/c6/a3e2c6336cb259c8c55ef409a6d18991.jpg',
-  },
-  {
-    id: 'ankara-teal',
-    name: 'Ankara teal',
-    image: 'https://i.pinimg.com/736x/03/2d/38/032d3864e33bdcf0d95ec8e03963978d.jpg',
-  },
-  {
-    id: 'wax-purple',
-    name: 'Wax purple',
-    image: 'https://i.pinimg.com/736x/66/a3/c0/66a3c01969ec557e5ac052765355ffb0.jpg',
-  },
-  {
-    id: 'aso-oke-red',
-    name: 'Aso-oke red',
-    image: 'https://i.pinimg.com/1200x/c3/b3/b7/c3b3b73f00a1657563517899d350e2c3.jpg',
-  },
+  { id: 'adire-indigo', name: 'Adire indigo', image: img('fabrics/adire-indigo.jpg') },
+  { id: 'ankara-sunset', name: 'Ankara sunset', image: img('fabrics/ankara-sunset.jpg') },
+  { id: 'kente-gold', name: 'Kente gold', image: img('fabrics/kente-gold.jpg') },
+  { id: 'ankara-teal', name: 'Ankara teal', image: img('fabrics/ankara-teal.jpg') },
+  { id: 'wax-purple', name: 'Wax purple', image: img('fabrics/wax-purple.jpg') },
+  { id: 'aso-oke-red', name: 'Aso-oke red', image: img('fabrics/aso-oke-red.jpg') },
 ]
 
 function SmartImage({ src, alt, className = '' }: { src?: string; alt: string; className?: string }) {
-  // Hotlinked images fail transiently (rate limits, flaky signal). Retry once
-  // before giving up, otherwise one blip leaves a placeholder for the session.
+  // Images are local now, but an order saved before a gallery change can still
+  // point at a missing file. Retry once, then fall back to a neutral tile
+  // rather than letting a broken image break the card layout.
   const [attempt, setAttempt] = useState(0)
   const [failed, setFailed] = useState(false)
 
@@ -113,8 +59,6 @@ function SmartImage({ src, alt, className = '' }: { src?: string; alt: string; c
       src={src}
       alt={alt}
       loading="lazy"
-      // some hosts block hotlinks by referrer; sending none loads more often
-      referrerPolicy="no-referrer"
       onError={() => {
         if (attempt === 0) setTimeout(() => setAttempt(1), 700)
         else setFailed(true)
