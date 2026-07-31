@@ -11,7 +11,6 @@ import Invoices from './pages/Invoices'
 import InvoiceNew from './pages/InvoiceNew'
 import InvoiceDetail from './pages/InvoiceDetail'
 import Settings from './pages/Settings'
-import Templates from './pages/Templates'
 import TemplateEditor from './pages/TemplateEditor'
 
 function Home() {
@@ -35,7 +34,8 @@ export default function App() {
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/invoice/new" element={<InvoiceNew />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/settings/templates" element={<Templates />} />
+        {/* templates now live inline in settings; keep the old path working */}
+        <Route path="/settings/templates" element={<Navigate to="/settings" replace />} />
         <Route path="/settings/templates/:id" element={<TemplateEditor />} />
         <Route path="*" element={<Navigate to="/orders" replace />} />
       </Routes>

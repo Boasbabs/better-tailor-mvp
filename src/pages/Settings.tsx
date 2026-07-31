@@ -1,18 +1,26 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Confirm, FieldLabel, Icons, inputCls, useToast } from '../components/ui'
 import { CurrencyPicker } from '../components/CurrencyPicker'
-import { FORM_URL, trackWaitlist } from '../lib'
+import { FORM_URL, trackWaitlist, uid } from '../lib'
 
 export default function Settings() {
+  const navigate = useNavigate()
   const settings = useStore((s) => s.settings)
   const saveSettings = useStore((s) => s.saveSettings)
   const templates = useStore((s) => s.templates)
+  const addTemplate = useStore((s) => s.addTemplate)
   const resetDemo = useStore((s) => s.resetDemo)
   const show = useToast((s) => s.show)
   const [confirmReset, setConfirmReset] = useState(false)
+
+  const createTemplate = () => {
+    const t = { id: uid(), name: 'New template', fields: ['length'] }
+    addTemplate(t)
+    navigate(`/settings/templates/${t.id}`)
+  }
 
   const openWaitlist = () => {
     trackWaitlist('settings')
@@ -66,14 +74,49 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* templates */}
-        <Link to="/settings/templates" className="bg-card rounded-2xl shadow-sm p-4 flex items-center justify-between active:scale-[0.98] transition">
-          <div>
-            <div className="font-bold">measurement templates</div>
-            <div className="text-xs text-ink/45">{templates.length} templates — edit fields or create your own</div>
+        {/* templates — listed inline so the tailor sees what they have
+            without tapping through an anonymous row first */}
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-display font-bold lowercase">measurement templates</h2>
+            <button
+              onClick={createTemplate}
+              className="shrink-0 text-xs font-bold bg-ink text-white rounded-full px-4 py-2 active:scale-95 transition"
+            >
+              + new
+            </button>
           </div>
-          {Icons.chevron('w-5 h-5 text-ink/30')}
-        </Link>
+          <p className="text-[13px] text-ink/45 mt-1 mb-3">
+            the fields you fill in for each garment. tap one to rename it, add fields or reorder them.
+          </p>
+
+          <div className="space-y-2">
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => navigate(`/settings/templates/${t.id}`)}
+                className="w-full bg-card rounded-2xl shadow-sm p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition"
+              >
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-card2 grid place-items-center text-ink/55">
+                  {Icons.ruler()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold truncate">{t.name}</div>
+                  <div className="text-xs text-ink/45 truncate">{t.fields.join(' · ') || 'no fields yet'}</div>
+                </div>
+                <span className="shrink-0 text-[11px] font-bold text-ink/40 bg-card2 rounded-full px-2 py-1">
+                  {t.fields.length}
+                </span>
+                {Icons.chevron('w-5 h-5 text-ink/25 shrink-0')}
+              </button>
+            ))}
+            {templates.length === 0 && (
+              <div className="bg-card2 rounded-2xl p-5 text-center text-sm text-ink/40 font-medium">
+                no templates yet — tap "+ new" to make one.
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* currency */}
         <div>

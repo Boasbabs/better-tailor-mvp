@@ -15,7 +15,7 @@ export default function TemplateEditor() {
 
   if (!template) {
     return (
-      <SubShell title="template" backTo="/settings/templates">
+      <SubShell title="template" backTo="/settings">
         <div className="text-center text-ink/40 py-20">template not found</div>
       </SubShell>
     )
@@ -37,7 +37,7 @@ export default function TemplateEditor() {
   }
 
   return (
-    <SubShell title="edit template" backTo="/settings/templates">
+    <SubShell title="edit template" backTo="/settings">
       <div className="space-y-5 pb-8">
         <div>
           <FieldLabel>template name</FieldLabel>
@@ -94,7 +94,7 @@ export default function TemplateEditor() {
         body={`"${template.name}" will be removed. Existing customers keep their saved measurements.`}
         onConfirm={() => {
           deleteTemplate(template.id)
-          navigate('/settings/templates', { replace: true })
+          navigate('/settings', { replace: true })
         }}
         onClose={() => setConfirmDelete(false)}
       />
