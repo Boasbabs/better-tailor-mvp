@@ -3,7 +3,8 @@ import { useStore } from '../store'
 import { HomeHeader, HomeShell } from '../components/shell'
 import { OrderCard } from '../components/cards'
 import { Icons, inputCls } from '../components/ui'
-import { dashboardStats, fmtCompact, FORM_URL, track } from '../lib'
+import { WaitlistBanner } from '../components/WaitlistBanner'
+import { dashboardStats, fmtCompact } from '../lib'
 import type { OrderStatus } from '../types'
 
 const FILTERS: ('all' | OrderStatus)[] = ['all', 'new', 'sewing', 'ready', 'delivered']
@@ -12,8 +13,6 @@ export default function Orders() {
   const orders = useStore((s) => s.orders)
   const customers = useStore((s) => s.customers)
   const settings = useStore((s) => s.settings)
-  const bannerDismissed = useStore((s) => s.bannerDismissed)
-  const dismissBanner = useStore((s) => s.dismissBanner)
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState<'all' | OrderStatus>('all')
 
@@ -28,11 +27,6 @@ export default function Orders() {
       return o.garment.toLowerCase().includes(ql) || (cust?.name.toLowerCase().includes(ql) ?? false)
     })
   }, [orders, customers, q, filter])
-
-  const openWaitlist = () => {
-    track('waitlist-click')
-    window.open(FORM_URL, '_blank')
-  }
 
   return (
     <HomeShell active="orders">
@@ -58,21 +52,7 @@ export default function Orders() {
         </div>
       </div>
 
-      {/* waitlist banner */}
-      {!bannerDismissed && (
-        <div className="mt-3 bg-ink text-white rounded-2xl p-4 flex items-center gap-3">
-          <button onClick={openWaitlist} className="flex-1 text-left active:scale-[0.98] transition">
-            <div className="font-bold text-[15px]">❤️ want this app for real?</div>
-            <div className="text-white/60 text-xs mt-0.5">join the waitlist — 3 minutes, shape what we build</div>
-          </button>
-          <button onClick={openWaitlist} className="bg-white text-ink rounded-full text-xs font-bold px-4 py-2 active:scale-95 transition shrink-0">
-            join
-          </button>
-          <button onClick={dismissBanner} className="text-white/50 p-1 -mr-1 shrink-0" aria-label="dismiss">
-            {Icons.x('w-4 h-4')}
-          </button>
-        </div>
-      )}
+      <WaitlistBanner className="mt-3" />
 
       {/* search + filters */}
       <div className="mt-4 relative">

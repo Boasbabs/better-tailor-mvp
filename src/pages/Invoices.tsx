@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import { HomeHeader, HomeShell } from '../components/shell'
 import { InvoicePill } from '../components/ui'
+import { WaitlistBanner } from '../components/WaitlistBanner'
 import { fmtDate, fmtMoney, invoiceMath } from '../lib'
 
 export default function Invoices() {
@@ -12,6 +13,7 @@ export default function Invoices() {
   return (
     <HomeShell active="invoices">
       <HomeHeader />
+      <WaitlistBanner className="mb-4" />
       <div className="space-y-2 flex flex-col">
         {invoices.map((inv) => {
           const cust = customers.find((c) => c.id === inv.customerId)

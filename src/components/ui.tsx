@@ -280,6 +280,18 @@ export const Icons = {
   edit: (c?: string) => <I className={c ?? 'w-5 h-5'} d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />,
   download: (c?: string) => <I className={c ?? 'w-5 h-5'} d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />,
   check: (c?: string) => <I className={c ?? 'w-4 h-4'} d="M20 6L9 17l-5-5" />,
+  ruler: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15.6 2.6 21.4 8.4a1.4 1.4 0 0 1 0 2L10.4 21.4a1.4 1.4 0 0 1-2 0L2.6 15.6a1.4 1.4 0 0 1 0-2L13.6 2.6a1.4 1.4 0 0 1 2 0Z" />
+      <path d="m14.4 7.4 1.7 1.7M11.4 10.4l1.7 1.7M8.4 13.4l1.7 1.7" />
+    </svg>
+  ),
+  bell: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8.4a6 6 0 1 0-12 0c0 6.6-2.6 8.6-2.6 8.6h17.2S18 15 18 8.4" />
+      <path d="M13.7 20.6a2 2 0 0 1-3.4 0" />
+    </svg>
+  ),
   up: (c?: string) => <I className={c ?? 'w-4 h-4'} d="M18 15l-6-6-6 6" />,
   down: (c?: string) => <I className={c ?? 'w-4 h-4'} d="M6 9l6 6 6-6" />,
   heart: (c?: string) => (

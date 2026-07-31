@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import { HomeHeader, HomeShell } from '../components/shell'
 import { Avatar, Icons, inputCls } from '../components/ui'
+import { WaitlistBanner } from '../components/WaitlistBanner'
 import { waPhone } from '../lib'
 
 export default function Customers() {
@@ -18,6 +19,7 @@ export default function Customers() {
   return (
     <HomeShell active="customers">
       <HomeHeader />
+      <WaitlistBanner className="mb-4" />
       <div className="relative">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30">{Icons.search()}</span>
         <input className={`${inputCls} pl-11`} placeholder="search customers…" value={q} onChange={(e) => setQ(e.target.value)} />
