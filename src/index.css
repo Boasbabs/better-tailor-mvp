@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #f5f5f3;
+  --color-card: #ffffff;
+  --color-card2: #efefed;
+  --color-ink: #111111;
+  --color-danger: #e5484d;
+  --color-warn: #f5a623;
+  --color-ok: #30a46c;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body {
+  background: #f5f5f3;
+  color: #111111;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.anim-sheet { animation: slide-up 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.anim-fade { animation: fade-in 0.2s ease; }
+.anim-pop { animation: pop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 1.5rem;
+}
+
+::-webkit-scrollbar { display: none; }
