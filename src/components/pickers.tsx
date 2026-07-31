@@ -3,7 +3,7 @@ import type { Customer } from '../types'
 import { useStore } from '../store'
 import { track, uid } from '../lib'
 import { Avatar, Icons, inputCls, Sheet, useToast } from './ui'
-import { FABRICS, FabricSwatch, STYLES, StyleIcon } from '../gallery'
+import { FABRICS, FabricImage, STYLES, StyleImage } from '../gallery'
 
 export function CustomerPickerSheet({
   open,
@@ -119,7 +119,7 @@ export function StylePickerSheet({
             onClick={() => onPick(s.id)}
             className={`bg-card rounded-2xl shadow-sm p-2 flex flex-col items-center active:scale-95 transition ${selected === s.id ? 'ring-2 ring-ink' : ''}`}
           >
-            <StyleIcon styleId={s.id} className="w-full h-20" />
+            <StyleImage styleId={s.id} className="w-full aspect-square rounded-xl" />
             <span className="text-[11px] font-bold lowercase mt-1">{s.name}</span>
           </button>
         ))}
@@ -149,7 +149,7 @@ export function FabricPickerSheet({
             onClick={() => onPick(f.id)}
             className={`bg-card rounded-2xl shadow-sm p-2 flex flex-col items-center active:scale-95 transition ${selected === f.id ? 'ring-2 ring-ink' : ''}`}
           >
-            <FabricSwatch fabricId={f.id} className="w-full h-20 rounded-xl" />
+            <FabricImage fabricId={f.id} className="w-full aspect-square rounded-xl" />
             <span className="text-[11px] font-bold lowercase mt-1 truncate w-full text-center">{f.name}</span>
           </button>
         ))}

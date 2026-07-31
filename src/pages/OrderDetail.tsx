@@ -4,7 +4,7 @@ import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Avatar, Celebration, Confirm, DuePill, Icons, PillButton } from '../components/ui'
 import { MeasurementGrid } from '../components/measure'
-import { FabricSwatch, StyleIcon, fabricName } from '../gallery'
+import { FabricImage, StyleImage, fabricName } from '../gallery'
 import { fmtMoney } from '../lib'
 import type { OrderStatus } from '../types'
 
@@ -60,10 +60,13 @@ export default function OrderDetail() {
     >
       <div className="space-y-3 pb-8">
         {/* hero */}
-        <div className="bg-card rounded-2xl shadow-sm p-5">
-          <div className="flex items-center justify-center relative">
-            <StyleIcon styleId={order.styleId || 'shirt'} className="h-40" />
-            <FabricSwatch fabricId={order.fabricId} className="w-14 h-14 rounded-xl absolute right-0 bottom-0 shadow-md" />
+        <div className="bg-card rounded-2xl shadow-sm p-4">
+          <div className="relative">
+            <StyleImage styleId={order.styleId} className="w-full aspect-[4/5] rounded-xl" />
+            <FabricImage
+              fabricId={order.fabricId}
+              className="w-16 h-16 rounded-xl absolute right-3 bottom-3 ring-4 ring-white shadow-lg"
+            />
           </div>
           <div className="mt-3 flex items-center justify-between gap-2">
             <div className="font-display font-bold text-xl leading-tight">{order.garment}</div>

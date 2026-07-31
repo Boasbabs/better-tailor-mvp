@@ -5,7 +5,7 @@ import { SubShell } from '../components/shell'
 import { Avatar, FieldLabel, PillButton, inputCls, useToast } from '../components/ui'
 import { CustomerPickerSheet, FabricPickerSheet, StylePickerSheet } from '../components/pickers'
 import { MeasurementGrid } from '../components/measure'
-import { FabricSwatch, StyleIcon, fabricName, styleName } from '../gallery'
+import { FabricImage, StyleImage, fabricName, styleName } from '../gallery'
 import { track, uid } from '../lib'
 import type { Customer, Order } from '../types'
 
@@ -162,7 +162,7 @@ export default function OrderForm() {
             <button onClick={() => setPickStyle(true)} className="w-full bg-card rounded-2xl shadow-sm p-3 active:scale-[0.98] transition">
               {styleId ? (
                 <>
-                  <StyleIcon styleId={styleId} className="w-full h-16" />
+                  <StyleImage styleId={styleId} className="w-full aspect-[4/3] rounded-xl" />
                   <div className="text-xs font-bold lowercase mt-1">{styleName(styleId)}</div>
                 </>
               ) : (
@@ -175,7 +175,7 @@ export default function OrderForm() {
             <button onClick={() => setPickFabric(true)} className="w-full bg-card rounded-2xl shadow-sm p-3 active:scale-[0.98] transition">
               {fabricId ? (
                 <>
-                  <FabricSwatch fabricId={fabricId} className="w-full h-16 rounded-xl" />
+                  <FabricImage fabricId={fabricId} className="w-full aspect-[4/3] rounded-xl" />
                   <div className="text-xs font-bold lowercase mt-1">{fabricName(fabricId)}</div>
                 </>
               ) : (
