@@ -6,6 +6,7 @@ import { Avatar, Confirm, Icons, PillButton, Sheet } from '../components/ui'
 import { MeasurementGrid } from '../components/measure'
 import { OrderCard } from '../components/cards'
 import { waPhone } from '../lib'
+import { agoLabel } from '../measure-link'
 import type { MeasurementSet } from '../types'
 
 export default function CustomerDetail() {
@@ -17,6 +18,9 @@ export default function CustomerDetail() {
   const orders = useMemo(() => allOrders.filter((o) => o.customerId === id), [allOrders, id])
   const updateCustomer = useStore((s) => s.updateCustomer)
   const deleteCustomer = useStore((s) => s.deleteCustomer)
+  const requests = useStore((s) => s.requests)
+  const clearRequest = useStore((s) => s.clearRequest)
+  const pending = requests.find((r) => r.customerId === id)
   const [openSet, setOpenSet] = useState<string | null>(null)
   const [addSet, setAddSet] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -101,16 +105,64 @@ export default function CustomerDetail() {
           </div>
         )}
 
+        {/* waiting on them — Lyft's "invite pending" beat */}
+        {pending && (
+          <div className="bg-[#FFF1DC] rounded-2xl p-4 mt-2">
+            <div className="flex items-center gap-2 text-[#9A5B00] font-bold text-sm">
+              <span className="w-2 h-2 rounded-full bg-[#E89100]" />
+              waiting for their measurements
+            </div>
+            <p className="text-[13px] text-[#9A5B00]/75 mt-1">
+              link sent {agoLabel(pending.sentAt)} · {pending.templateIds.length} set
+              {pending.templateIds.length === 1 ? '' : 's'} requested
+            </p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => navigate(`/ask?customer=${customer.id}`)}
+                className="flex-1 bg-ink text-white rounded-full text-xs font-bold py-2.5 active:scale-95 transition"
+              >
+                send again
+              </button>
+              <button
+                onClick={() => clearRequest(pending.id)}
+                className="px-4 text-[#9A5B00]/70 text-xs font-bold active:scale-95 transition"
+              >
+                cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* measurement sets */}
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-2 gap-2">
           <h2 className="font-display font-bold lowercase">measurements</h2>
-          <button onClick={() => setAddSet(true)} className="text-xs font-bold bg-ink text-white rounded-full px-4 py-2 active:scale-95 transition">
-            + add set
-          </button>
+          <div className="flex gap-2 shrink-0">
+            {!pending && (
+              <button
+                onClick={() => navigate(`/ask?customer=${customer.id}`)}
+                className="text-xs font-bold bg-card shadow-sm rounded-full px-4 py-2 active:scale-95 transition"
+              >
+                ask them
+              </button>
+            )}
+            <button onClick={() => setAddSet(true)} className="text-xs font-bold bg-ink text-white rounded-full px-4 py-2 active:scale-95 transition">
+              + add set
+            </button>
+          </div>
         </div>
         {customer.sets.length === 0 && (
-          <div className="bg-card2 rounded-2xl p-5 text-center text-sm text-ink/40 font-medium">
-            no measurements saved yet — add a set so orders can auto-fill.
+          <div className="bg-card2 rounded-2xl p-5 text-center">
+            <div className="text-sm text-ink/45 font-medium">
+              no measurements saved yet — add a set so orders can auto-fill.
+            </div>
+            {!pending && (
+              <button
+                onClick={() => navigate(`/ask?customer=${customer.id}`)}
+                className="mt-3 text-xs font-bold text-ink underline underline-offset-4 active:scale-95 transition"
+              >
+                or send {customer.name.split(' ')[0]} a link to fill in their own
+              </button>
+            )}
           </div>
         )}
         {customer.sets.map((set) => {

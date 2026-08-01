@@ -150,7 +150,7 @@ export function track(event: 'opened' | 'engaged' | 'waitlist-click') {
   count(event)
 }
 
-export type WaitlistSource = 'orders' | 'customers' | 'invoices' | 'settings'
+export type WaitlistSource = 'orders' | 'customers' | 'invoices' | 'settings' | 'customer-form'
 
 // Fires the canonical funnel event *and* a per-surface breakdown. Keeping the
 // aggregate means the funnel number stays one row in GoatCounter instead of a
@@ -158,4 +158,16 @@ export type WaitlistSource = 'orders' | 'customers' | 'invoices' | 'settings'
 export function trackWaitlist(source: WaitlistSource) {
   count('waitlist-click')
   count(`waitlist-click/${source}`)
+}
+
+// Self-measurement funnel: sent → opened → submitted → received → saved.
+// Deliberately its own namespace and deliberately NOT firing `engaged` or
+// `opened`, so the existing baseline stays comparable while the experiment
+// runs. Note that `measure/opened` and `measure/submitted` fire from the
+// *customer's* browser — pageviews on this site are no longer tailors only.
+export type MeasureEvent = 'sent' | 'opened' | 'submitted' | 'received' | 'saved'
+
+export function trackMeasure(event: MeasureEvent, variant?: 'customer' | 'open') {
+  count(`measure/${event}`)
+  if (variant) count(`measure/${event}/${variant}`)
 }

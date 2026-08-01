@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Customer, Data, Invoice, Order, Settings, Template } from './types'
+import type { Customer, Data, Invoice, MeasurementRequest, Order, Settings, Template } from './types'
 import { makeSeed } from './seed'
 
 type Store = Data & {
@@ -12,6 +12,8 @@ type Store = Data & {
   deleteOrder: (id: string) => void
   addInvoice: (i: Invoice) => void
   updateInvoice: (id: string, patch: Partial<Invoice>) => void
+  saveRequest: (r: MeasurementRequest) => void
+  clearRequest: (id: string) => void
   addTemplate: (t: Template) => void
   updateTemplate: (id: string, patch: Partial<Template>) => void
   deleteTemplate: (id: string) => void
@@ -31,6 +33,7 @@ export const useStore = create<Store>()(
         set((s) => ({
           customers: s.customers.filter((c) => c.id !== id),
           orders: s.orders.filter((o) => o.customerId !== id),
+          requests: s.requests.filter((r) => r.customerId !== id),
         })),
       addOrder: (o) => set((s) => ({ orders: [o, ...s.orders] })),
       updateOrder: (id, patch) =>
@@ -39,6 +42,13 @@ export const useStore = create<Store>()(
       addInvoice: (i) => set((s) => ({ invoices: [i, ...s.invoices] })),
       updateInvoice: (id, patch) =>
         set((s) => ({ invoices: s.invoices.map((i) => (i.id === id ? { ...i, ...patch } : i)) })),
+      // One outstanding request per customer — asking again replaces the old
+      // one rather than stacking up duplicate "waiting" states.
+      saveRequest: (r) =>
+        set((s) => ({
+          requests: [...s.requests.filter((x) => x.id !== r.id && !(r.customerId && x.customerId === r.customerId)), r],
+        })),
+      clearRequest: (id) => set((s) => ({ requests: s.requests.filter((r) => r.id !== id) })),
       addTemplate: (t) => set((s) => ({ templates: [...s.templates, t] })),
       updateTemplate: (id, patch) =>
         set((s) => ({ templates: s.templates.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
@@ -54,6 +64,7 @@ export const useStore = create<Store>()(
         customers: s.customers,
         orders: s.orders,
         invoices: s.invoices,
+        requests: s.requests,
         settings: s.settings,
         bannerDismissed: s.bannerDismissed,
       }),

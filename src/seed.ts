@@ -75,6 +75,17 @@ export function makeSeed(): Data {
         ],
         createdAt: agoISO(14),
       },
+      // The self-measurement story in one row: abroad, never measured in
+      // person, nothing saved yet, link already sent.
+      {
+        id: 'c-ngozi',
+        name: 'Ngozi Umeh',
+        phone: '+447700900123',
+        area: 'London, UK',
+        gender: 'female',
+        sets: [],
+        createdAt: agoISO(3),
+      },
       {
         id: 'c-ibrahim',
         name: 'Kunle Remi',
@@ -232,6 +243,14 @@ export function makeSeed(): Data {
         depositPaid: 30000,
         status: 'part-paid',
         createdAt: agoISO(1),
+      },
+    ],
+    requests: [
+      {
+        id: 'r-ngozi',
+        customerId: 'c-ngozi',
+        templateIds: ['t-gown', 't-blouse'],
+        sentAt: agoISO(2),
       },
     ],
     settings: {

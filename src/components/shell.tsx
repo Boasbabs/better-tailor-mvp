@@ -109,6 +109,7 @@ export function TabBar({ active }: { active: TabName }) {
             { label: 'new order', sub: 'garment, measurements & due date', path: '/order/new', icon: Icons.shirt() },
             { label: 'new customer', sub: 'name, phone & measurement sets', path: '/customer/new', icon: Icons.people() },
             { label: 'new invoice', sub: 'line items, deposit & balance due', path: '/invoice/new', icon: Icons.receipt() },
+            { label: 'ask for measurements', sub: 'send a link they fill in themselves', path: '/ask', icon: Icons.ruler() },
           ].map((a) => (
             <button
               key={a.path}

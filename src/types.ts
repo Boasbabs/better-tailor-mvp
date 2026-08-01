@@ -43,6 +43,15 @@ export type Invoice = {
   createdAt: string
 }
 
+// An outstanding "fill in your own measurements" link. Only unanswered
+// requests live here — saving a submission removes it.
+export type MeasurementRequest = {
+  id: string
+  customerId: string // '' = open link, not tied to anyone yet
+  templateIds: string[]
+  sentAt: string // ISO datetime
+}
+
 export type Currency = '₦' | '€' | '$' | '£' | 'GH₵'
 
 export type Settings = {
@@ -60,6 +69,7 @@ export type Data = {
   customers: Customer[]
   orders: Order[]
   invoices: Invoice[]
+  requests: MeasurementRequest[]
   settings: Settings
   bannerDismissed: boolean
 }

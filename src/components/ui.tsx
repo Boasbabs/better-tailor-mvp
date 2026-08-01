@@ -280,6 +280,12 @@ export const Icons = {
   edit: (c?: string) => <I className={c ?? 'w-5 h-5'} d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />,
   download: (c?: string) => <I className={c ?? 'w-5 h-5'} d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />,
   check: (c?: string) => <I className={c ?? 'w-4 h-4'} d="M20 6L9 17l-5-5" />,
+  copy: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="12" height="12" rx="2.5" />
+      <path d="M6 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V6" />
+    </svg>
+  ),
   ruler: (c?: string) => (
     <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
       <path d="M15.6 2.6 21.4 8.4a1.4 1.4 0 0 1 0 2L10.4 21.4a1.4 1.4 0 0 1-2 0L2.6 15.6a1.4 1.4 0 0 1 0-2L13.6 2.6a1.4 1.4 0 0 1 2 0Z" />

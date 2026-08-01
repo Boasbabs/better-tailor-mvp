@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store'
 import { SubShell } from '../components/shell'
-import { Avatar, FieldLabel, PillButton, inputCls, useToast } from '../components/ui'
+import { Avatar, FieldLabel, PillButton, Sheet, inputCls, useToast } from '../components/ui'
 import { CustomerPickerSheet, FabricPickerSheet, StylePickerSheet } from '../components/pickers'
 import { MeasurementGrid } from '../components/measure'
+import { AskActions } from '../components/ask'
 import { FabricImage, StyleImage, fabricName, styleName } from '../gallery'
 import { track, uid } from '../lib'
+import { agoLabel } from '../measure-link'
 import type { Customer, Order } from '../types'
 
 export default function OrderForm() {
@@ -38,9 +40,22 @@ export default function OrderForm() {
   const [pickCustomer, setPickCustomer] = useState(false)
   const [pickStyle, setPickStyle] = useState(false)
   const [pickFabric, setPickFabric] = useState(false)
+  const [asking, setAsking] = useState(false)
 
   const customer = useMemo(() => customers.find((c) => c.id === customerId), [customers, customerId])
   const template = useMemo(() => templates.find((t) => t.id === templateId), [templates, templateId])
+
+  // The sharpest moment of pain in the app: the order is half-built and the
+  // measurements simply aren't there. Handled in a sheet rather than a route
+  // so the half-typed order survives.
+  const requests = useStore((s) => s.requests)
+  const pending = requests.find((r) => r.customerId === customerId)
+  const hasSet = Boolean(customer?.sets.some((s) => s.templateId === templateId))
+  const askable = Boolean(customer && template && !hasSet && !editing)
+  const alreadyAsked = Boolean(pending?.templateIds.includes(templateId))
+  // Asking again shouldn't quietly drop a set the tailor asked for earlier.
+  const askTemplates = pending ? [...new Set([...pending.templateIds, templateId])] : [templateId]
+  const askRequestId = pending?.id ?? `req-${uid().slice(0, 8)}`
 
   // snapshot autofill: copy the customer's saved set for this template
   const applyTemplate = (tid: string, cust: Customer | undefined) => {
@@ -147,6 +162,26 @@ export default function OrderForm() {
                 <span className="text-[11px] font-bold text-ok mb-1.5">✓ auto-filled from {autofilledFrom.split(' ')[0]}'s set</span>
               )}
             </div>
+            {askable &&
+              (alreadyAsked ? (
+                <div className="bg-[#FFF1DC] rounded-2xl px-4 py-3 mb-2 text-[13px] font-bold text-[#9A5B00]">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#E89100] mr-2 align-middle" />
+                  waiting on {customer!.name.split(' ')[0]} — link sent {agoLabel(pending!.sentAt)}. you can still fill
+                  these in yourself.
+                </div>
+              ) : (
+                <div className="bg-card2 rounded-2xl p-3.5 mb-2 flex items-center gap-3">
+                  <div className="flex-1 text-[13px] text-ink/55 font-medium leading-snug">
+                    nothing saved for {template.name} — {customer!.name.split(' ')[0]} can send their own.
+                  </div>
+                  <button
+                    onClick={() => setAsking(true)}
+                    className="shrink-0 text-xs font-bold bg-ink text-white rounded-full px-4 py-2.5 active:scale-95 transition"
+                  >
+                    ask them
+                  </button>
+                </div>
+              ))}
             <MeasurementGrid
               fields={template.fields}
               values={measurements}
@@ -210,6 +245,24 @@ export default function OrderForm() {
           {editing ? 'save changes' : 'add order'}
         </PillButton>
       </div>
+
+      <Sheet
+        open={asking}
+        onClose={() => setAsking(false)}
+        title={customer ? `ask ${customer.name.split(' ')[0]} for measurements` : 'ask for measurements'}
+      >
+        <p className="text-[13px] text-ink/50 mb-4">
+          they'll get a link for {askTemplates.length === 1 ? template?.name : `${askTemplates.length} sets`} — every
+          field carries its own instructions. your order stays as you left it.
+        </p>
+        <AskActions
+          customer={customer}
+          templateIds={askTemplates}
+          requestId={askRequestId}
+          sendLabel={customer?.phone ? `send to ${customer.name.split(' ')[0]}` : 'send on whatsapp'}
+          onSent={() => setAsking(false)}
+        />
+      </Sheet>
 
       <CustomerPickerSheet open={pickCustomer} onClose={() => setPickCustomer(false)} onPick={onPickCustomer} />
       <StylePickerSheet open={pickStyle} onClose={() => setPickStyle(false)} selected={styleId} onPick={(s) => { setStyleId(s); setPickStyle(false) }} />

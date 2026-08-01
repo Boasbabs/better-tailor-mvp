@@ -9,6 +9,7 @@ import { waPhone } from '../lib'
 export default function Customers() {
   const customers = useStore((s) => s.customers)
   const orders = useStore((s) => s.orders)
+  const requests = useStore((s) => s.requests)
   const [q, setQ] = useState('')
 
   const filtered = useMemo(
@@ -28,6 +29,7 @@ export default function Customers() {
       <div className="mt-3 space-y-2 flex flex-col">
         {filtered.map((c) => {
           const count = orders.filter((o) => o.customerId === c.id).length
+          const waiting = requests.some((r) => r.customerId === c.id)
           return (
             <div key={c.id} className="bg-card rounded-2xl shadow-sm p-3 flex items-center gap-3">
               <Link to={`/customers/${c.id}`} className="flex items-center gap-3 flex-1 min-w-0 active:scale-[0.98] transition">
@@ -38,8 +40,16 @@ export default function Customers() {
                     {c.phone}
                     {c.area ? ` · ${c.area}` : ''}
                   </div>
-                  <div className="text-[11px] font-bold text-ink/35 mt-0.5">
-                    {count} order{count === 1 ? '' : 's'}
+                  <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-bold text-ink/35">
+                      {count} order{count === 1 ? '' : 's'}
+                    </span>
+                    {waiting && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full pl-2 pr-2.5 py-0.5 text-[11px] font-bold bg-[#FFF1DC] text-[#9A5B00]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#E89100]" />
+                        waiting
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>

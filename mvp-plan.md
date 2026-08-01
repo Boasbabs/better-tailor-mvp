@@ -44,6 +44,9 @@
 | 14 | PWA | Manifest + icons only (installable, standalone). **No service worker** (avoids stale-cache demos) |
 | 15 | Analytics | GoatCounter (free, no cookie banner) + 3 custom events: `opened`, `engaged`, `waitlist-click` |
 | 16 | Deploy | GitHub Pages via `gh-pages` npm package, HashRouter, single canonical URL |
+| 17 | **Self-measurement round-trip** | Link out + link back, both carried by WhatsApp. Request and reply are encoded **inside the URL** (base64url in the hash) — the only way to move data phone-to-phone with no backend. See §13 |
+| 18 | **Self-measurement scope** | Bound per-customer link (primary) + reusable open link (secondary); multi-select templates in one form; in/cm toggle converting to inches on submit |
+| 19 | **Self-measurement trust** | Nothing is written until the tailor reviews it — conflicts show old → new in amber. Never auto-merge over hand-taken measurements |
 
 ---
 
@@ -95,6 +98,11 @@ Reference: [pushr on Mobbin](https://mobbin.com/apps/pushr-ios-b9fbf2d1-5e5d-4c3
 /settings    settings (templates, business info, currency, reset, waitlist)
 /settings/templates      template list
 /settings/templates/:id  template editor
+
+── self-measurement (§13) ──
+/ask                 tailor: build & send a measurement request
+/fill/:payload       CUSTOMER-FACING form (no tabs, no app chrome)
+/received/:payload   tailor: review the reply, then save
 ```
 
 ### 4.1 Welcome (`/`)
@@ -158,6 +166,13 @@ type Invoice = {
   depositPaid, status: 'unpaid'|'part-paid'|'paid', createdAt
 }
 type Settings = { businessName, tagline, phone, bankName, accountNumber, accountName, currency: '₦'|'€'|'$'|'£'|'GH₵' }
+
+// §13 — only *outstanding* asks live here; saving a submission removes the row
+type MeasurementRequest = {
+  id, customerId,          // customerId '' = open link, not tied to anyone yet
+  templateIds: string[],
+  sentAt                   // ISO datetime
+}
 ```
 
 Derived (never stored): urgency = f(dueDate, today); balance = total − discount − depositPaid; dashboard stats.
@@ -167,6 +182,7 @@ Derived (never stored): urgency = f(dueDate, today); balance = total − discoun
 - **Customers (6):** Adaeze Okafor, Emeka Obi, Funke Adeyemi, Tunde Bakare, Chiamaka Eze, Ibrahim Musa — Nigerian phone formats (+234…), areas (Surulere, Ikeja, Yaba, Lekki…), realistic filled measurement sets.
 - **Orders (8):** staged so the demo lands — 1 **overdue** (red), 2 **due this week** (amber), mix of statuses including 2 delivered, garments: Agbada, Senator, Ankara gown, Kaftan, 2-pc suit trouser…, prices ₦15,000–₦85,000, some with deposits.
 - **Invoices (2):** one paid, one **part-paid** (shows deposit + balance-due math immediately).
+- **Requests (1):** Ngozi Umeh (London, UK — no measurements saved) with a Gown + Blouse link already sent 2 days ago. The self-measurement story in one row: remote, never measured in person, still waiting.
 
 ---
 
@@ -189,7 +205,7 @@ Derived (never stored): urgency = f(dueDate, today); balance = total − discoun
   ```
 - **PNG download:** `html2canvas` on the invoice card node → `canvas.toDataURL` → anchor download `invoice-BT-0007.png`.
 - **Urgency:** overdue = dueDate < today (red); due-soon = ≤ 3 days (amber); else grey. Delivered orders show green and drop out of dashboard counts.
-- **GoatCounter:** script tag in `index.html`; `window.goatcounter.count({path:'opened'|'engaged'|'waitlist-click', event:true})`.
+- **GoatCounter:** script tag in `index.html`; `window.goatcounter.count({path:'opened'|'engaged'|'waitlist-click', event:true})`. Self-measurement adds its own `measure/*` namespace — see §13.
 - **PWA:** `manifest.webmanifest` (name "better tailor", `display: standalone`, theme `#111111`, bg `#F5F5F3`, 192/512 icons) + `apple-touch-icon`. No service worker.
 - **Routing:** HashRouter (`/#/orders`) — survives refresh on GH Pages with no 404 hack.
 
@@ -297,3 +313,69 @@ Live at `https://<username>.github.io/better-tailor-mvp/` in ~1–2 minutes. **R
 3. Build Phases 1–5 (§7).
 4. Deploy (§9), send yourself the link on WhatsApp, run the demo script on your own phone.
 5. Book the first 5 tailor demos.
+
+---
+
+## 13. Experiment 2 — customers submit their own measurements
+
+**Added 2026-08-01, after the first round of demos.** This is a follow-up experiment layered on the shipped MVP, not part of the original one-day scope.
+
+### 13.1 Where the requirement came from
+
+Two unprompted signals from real tailors:
+
+1. *"Could it be that customers have access to put measurements themselves?"*
+2. A second tailor volunteered that he **asks remote customers for their measurements** — over WhatsApp, by hand, today.
+
+Signal 2 is the stronger one: it's an existing painful workaround, not a feature wish. The wedge is remote/diaspora customers a tailor can never physically measure.
+
+**Hypothesis:** tailors with remote customers will send a self-measurement link, and enough customers will complete it that the tailor stops chasing measurements by hand. If tailors send links but customers don't finish, the problem is the form. If tailors never send links, the problem is the premise.
+
+### 13.2 The constraint that shapes everything
+
+**There is no backend.** The app is static (GitHub Pages) with `localStorage` only. A customer typing on *their* phone cannot write to the tailor's phone over a network. So the data travels inside the URL:
+
+- **Request out:** tailor's app encodes business name, tailor phone, customer name/id and the requested templates + field names as base64url in the hash → `#/fill/<payload>` → shared via `wa.me`. Field names ride along, so a template the tailor invented still renders on a stranger's phone.
+- **Reply back:** the customer's answers encode into `#/received/<payload>`, sent to the tailor's `wa.me` **below a human-readable copy of the numbers** — so a mangled link still leaves the tailor with usable measurements.
+- Measured on the production origin: request link **479 chars**, reply link **516** (a 3-template request runs ~595). The full WhatsApp reply *message* — readable numbers plus the link — is ~1.4k. Base64**url** (no `+ / =`) so WhatsApp, hash routing and copy-paste don't corrupt it.
+
+### 13.3 Flow
+
+```
+tailor: /ask ──wa.me──▶ customer: /fill/:payload ──wa.me──▶ tailor: /received/:payload ──▶ saved to customer.sets
+         (request stored as MeasurementRequest = "waiting")            (review, then save; request cleared)
+```
+
+**Three entry points for the tailor:** customer detail (button + empty state), the `+` create sheet, and a settings card for the reusable open link. Plus an in-context prompt in the **new-order flow** — when the picked customer has no set for the picked template, the exact moment of pain. That one opens a **bottom sheet, not a route**, so the half-built order survives.
+
+**Customer-facing form** (`/fill/:payload`) is deliberately not the tailor's app: no tabs, no wordmark, no route back into anyone's data. The tailor's business name leads the page. One section per template; every field carries its own instruction ("around the fullest part of your bust, arms down at your sides") because the person holding the tape has probably never done this before. Inches/cm toggle, converted to inches on submit. One optional free-text note — where "I like the sleeves loose" and "I'm 5 months pregnant" actually land.
+
+**Review before save** (`/received/:payload`): values that differ from what the tailor already has show old → new in amber; new fields get a green dot. Nothing is written until the tailor agrees. Submissions from an open link offer "add them & save" as a new customer.
+
+### 13.4 The funnel we're measuring
+
+| Stage | Event | What a drop-off here means |
+|---|---|---|
+| Tailor sent a link | `measure/sent` (+ `/customer`, `/open`) | Zero = the premise is wrong; tailors don't want this |
+| Customer opened it | `measure/opened` | Tailors send but links die in WhatsApp — check link fragility |
+| Customer completed it | `measure/submitted` | The form is too long, too confusing, or too intimidating |
+| Tailor got it back | `measure/received` | The reply link is the weak leg — lean on the readable text |
+| Tailor kept it | `measure/saved` | They don't trust customer-supplied numbers |
+
+Plus `waitlist-click/customer-form` — every customer who fills a form is a stranger meeting the product, so the completion screen carries a quiet "are you a tailor too?" hook. Second funnel, separately measurable.
+
+**Deliberately does NOT fire `engaged`**, so the pre-experiment baseline in §1 stays comparable.
+
+> ⚠️ **Measurement hazard:** `measure/opened` and `measure/submitted` fire from the **customer's** browser. GoatCounter pageviews are no longer tailors-only. Segment before quoting reach numbers.
+
+### 13.5 Demoing it
+
+A 5-minute demo can't involve a real customer's phone, so the send screen has **"preview what they'll see"** — it opens the genuine customer form (amber preview strip, real payload). In preview, submitting hands you straight to the review screen instead of bouncing through WhatsApp, so the whole loop runs on one device. The seed ships **Ngozi Umeh** with a link already pending, so the waiting state is visible on first run.
+
+### 13.6 Honest risks
+
+1. **The reply link is the fragile leg.** A ~1.4k-character WhatsApp message through unknown Android builds, with a 516-char link inside it. Untested on real WhatsApp across devices — mitigated by putting readable numbers above the link and offering "copy the message instead", but if `measure/submitted` >> `measure/received`, this is why.
+2. **Customer-measured numbers may simply be wrong.** A tailor who gets a bad garment out of a self-measured order blames the app. The per-field instructions and the review screen are the mitigation; watch for tailors who receive submissions and never save them.
+3. **It may be a diaspora-only feature.** A tailor whose customers all walk into the shop has no use for this. Cross-reference senders against the form's city/country answers before concluding it's a core feature rather than a segment feature.
+4. **Sending through the tailor's own customer relationship is a trust surface.** The page is tailor-branded for that reason; the better-tailor mention appears only after submission. If any tailor reacts badly to it being there at all, that's a strong signal to white-label.
+5. **No expiry, no auth.** Anyone with the link can submit, repeatedly. Fine for validation, not for production.
