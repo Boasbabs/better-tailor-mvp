@@ -294,6 +294,30 @@ export const Icons = {
   ),
   up: (c?: string) => <I className={c ?? 'w-4 h-4'} d="M18 15l-6-6-6 6" />,
   down: (c?: string) => <I className={c ?? 'w-4 h-4'} d="M6 9l6 6 6-6" />,
+  video: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="14" height="12" rx="2.5" />
+      <path d="m16 10.5 5-3v9l-5-3z" />
+    </svg>
+  ),
+  calendar: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2.5" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  ),
+  clock: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5.3l3.2 2" />
+    </svg>
+  ),
+  link: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13.5a4 4 0 0 0 5.7.4l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7" />
+      <path d="M14 10.5a4 4 0 0 0-5.7-.4l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7" />
+    </svg>
+  ),
   heart: (c?: string) => (
     <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="currentColor">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -313,7 +337,7 @@ export const Icons = {
 // ---------- tab icons ----------
 // Filled when active, outlined when not — the pattern Spotify/Tonal use, and
 // far more legible at 26px than relying on opacity alone.
-export type TabName = 'orders' | 'customers' | 'invoices'
+export type TabName = 'orders' | 'calls' | 'customers' | 'invoices'
 
 export function TabIcon({ name, active, className }: { name: TabName; active: boolean; className?: string }) {
   const s = {
@@ -331,6 +355,14 @@ export function TabIcon({ name, active, className }: { name: TabName; active: bo
         <>
           <path {...s} d="M12 9.4V8.7a2.7 2.7 0 1 1 2.7-2.7" />
           <path {...s} fill={solid} d="M12 9.4 4.15 15.3a1.8 1.8 0 0 0 1.1 3.24h13.5a1.8 1.8 0 0 0 1.1-3.24L12 9.4Z" />
+        </>
+      )}
+      {name === 'calls' && (
+        // video camera — the mark this feature already uses on its cards, in
+        // the + sheet and in settings, so the tab reads as the same thing
+        <>
+          <rect {...s} fill={solid} x="2.2" y="6.2" width="13.4" height="11.6" rx="2.6" />
+          <path {...s} fill={solid} d="m16.4 10.8 4.5-2.7a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-4.5-2.7z" />
         </>
       )}
       {name === 'customers' && (

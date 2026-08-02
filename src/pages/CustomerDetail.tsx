@@ -101,6 +101,20 @@ export default function CustomerDetail() {
           </div>
         )}
 
+        <button
+          onClick={() => navigate(`/consult/share?customer=${customer.id}`)}
+          className="w-full bg-card shadow-sm rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.98] transition text-left"
+        >
+          <div className="w-10 h-10 shrink-0 rounded-full bg-ink text-white grid place-items-center">
+            {Icons.video('w-[18px] h-[18px]')}
+          </div>
+          <div className="min-w-0">
+            <div className="font-bold text-sm lowercase">book a fitting call</div>
+            <div className="text-xs text-ink/45">send a link to take their measurements together</div>
+          </div>
+          {Icons.chevron('w-5 h-5 text-ink/25 ml-auto shrink-0')}
+        </button>
+
         {/* measurement sets */}
         <div className="flex items-center justify-between mt-2">
           <h2 className="font-display font-bold lowercase">measurements</h2>

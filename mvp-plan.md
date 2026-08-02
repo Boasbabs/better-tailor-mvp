@@ -86,6 +86,7 @@ Reference: [pushr on Mobbin](https://mobbin.com/apps/pushr-ios-b9fbf2d1-5e5d-4c3
 /orders      ORDERS TAB (default)
 /orders/:id  order detail / edit
 /order/new   create order
+/consultations  CALLS TAB
 /customers   CUSTOMERS TAB
 /customers/:id  customer detail (info + measurement sets + their orders)
 /customer/new   create customer
@@ -95,7 +96,15 @@ Reference: [pushr on Mobbin](https://mobbin.com/apps/pushr-ios-b9fbf2d1-5e5d-4c3
 /settings    settings (templates, business info, currency, reset, waitlist)
 /settings/templates      template list
 /settings/templates/:id  template editor
+
+CONSULTATION EXPERIMENT (§4.11)
+/consultations/:id   the call console
+/consult/share       build & send a booking link
+/book/:payload       CUSTOMER-FACING booking page
+/booked/:payload     tailor reviews an incoming booking
 ```
+
+The tab bar carries **four** tabs — orders · calls · customers · invoices — with the `+` still floating clear above its right end, the arrangement Jobber (whose second tab is likewise a schedule) and Squarespace both use at this count.
 
 ### 4.1 Welcome (`/`)
 Pushr-clone: wordmark **better tailor**, line: *"your customers, measurements, orders & invoices — in one place."*, black pill **let's go** → `/orders`. Sets `bt_seen_welcome`, fires `opened` event. Skipped on revisit.
@@ -133,6 +142,38 @@ White card, Pushr share-card style: business name + tagline (from settings), inv
 ### 4.10 Settings
 Business info (name, tagline, phone, bank name, account number, account name) · measurement templates (list → editor: rename, add/remove/reorder fields, delete; "create template") · currency symbol picker (₦ default / € / $ / £ / GH₵) · **join the waitlist** card → Google Form · **reset demo data** (confirm dialog → restore seed) · tiny footer: "better tailor — prototype".
 
+### 4.11 Fitting calls — the consultation experiment
+
+**Why:** sending customers a link to type their own measurements produces wrong sizes, and a bad fit is the tailor's bad review, not the customer's. A tailor proposed the alternative unprompted: get on a video call and talk them through the tape. This experiment tests whether tailors will send a booking link to get that call. It replaces the abandoned self-measurement direction (`feat/customer-self-measurement`, never merged).
+
+**Where it lives:** its own **calls** tab (video-camera glyph, filled when active like the others). The tab leads with the next call in the slot the orders tab gives to due dates — big time, then "{name} · tomorrow", switching to a countdown inside 45 minutes and to "now" while it is happening — then the filter row and the list. With nothing booked, the filters and list are suppressed entirely and the tab is just that card plus **send a booking link**. Also reachable from the `+` sheet, a button on customer detail, and a settings card.
+
+**Setup (settings → fitting calls):** channel (WhatsApp video call / Google Meet / Zoom; the last two take one permanent room link that rides on every booking) · days you take calls · from/to · call length 15/30/45. Ships prefilled Mon–Sat 9–6, 30 min, so a link works with zero setup. Booking horizon (14 days) and minimum notice (2 hours) are fixed in code, not exposed.
+
+**The round trip — no backend, so it travels in the URL:**
+
+```
+tailor: /consult/share  →  encodes hours, channel & already-taken slots
+        ↓ WhatsApp (or copy link, or "preview as your customer")
+customer: /book/:payload  →  day strip → slots (morning/afternoon/evening)
+                             → name & phone (skipped on a bound link)
+                             → garment → optional photo → note
+        ↓ WhatsApp, details readable in the message itself
+tailor: /booked/:payload  →  review, then save (nothing is written before that)
+        ↓
+        /consultations/:id — the call console
+```
+
+Two link kinds share one page: **bound** (one customer, name prefilled) and **open** (reusable; a stranger types their own details and becomes a customer when the tailor saves).
+
+**Slot clashes:** each shared link bakes in the slots taken at that moment and shows them struck through. A stale copied link can still land on a filled slot, so the review screen shows an amber "this time is already taken — {name} is booked for…" with *offer them another time* beside save.
+
+**The style photo:** downscaled in the customer's own browser (≤3,400 chars; a 2.4MB photo lands ~3,000) so it genuinely fits in the link. If the whole link would pass 5,000 chars the thumbnail is dropped and flagged instead. Either way the WhatsApp message asks them to attach the full-size original to the chat, where it actually belongs.
+
+**The call console (`/consultations/:id`):** start-the-call button (WhatsApp video / Meet / Zoom), what they want + their photo + note, then the measurement template — preselected from the garment they picked — as a vertical list, one row per field with the instruction to read aloud ("around the fullest part of your chest, arms down at your sides"). Values save to the customer's set as they are typed, so the next order auto-fills from them. Then *mark done* → **start an order for {name}**, plus send-a-reminder and cancel.
+
+**Analytics:** its own `consult/*` namespace — `link-shared`, `page-opened`, `booked`, `saved`, `call-started`, `channel-set`. Deliberately does **not** fire `engaged`, so the pre-experiment baseline stays comparable. Note `page-opened` and `booked` fire from the *customer's* browser, so pageviews are no longer tailors-only.
+
 ---
 
 ## 5. Data model (localStorage)
@@ -157,8 +198,23 @@ type Invoice = {
   discount: { kind: 'flat'|'percent', value: number } | null,
   depositPaid, status: 'unpaid'|'part-paid'|'paid', createdAt
 }
-type Settings = { businessName, tagline, phone, bankName, accountNumber, accountName, currency: '₦'|'€'|'$'|'£'|'GH₵' }
+type Settings = {
+  businessName, tagline, phone, bankName, accountNumber, accountName,
+  currency: '₦'|'€'|'$'|'£'|'GH₵',
+  callChannel: 'whatsapp'|'meet'|'zoom', callLink,               // consultation experiment
+  availability: { days: number[], from, to, slotMins }           // 0 = Sunday
+}
+type Consultation = {
+  id, customerId, name, phone,                  // name/phone snapshotted at booking time
+  date, time,                                   // 'YYYY-MM-DD' + 'HH:MM', tailor's wall clock
+  durationMins, channel, link,
+  styleId, templateId,                          // garment they picked → template to open
+  photo, photoPending,                          // thumbnail carried in the link / full one is in the chat
+  note, status: 'upcoming'|'done'|'cancelled', createdAt
+}
 ```
+
+Persisted at `version: 2`, and repaired in zustand's **`merge`**, not `migrate` — deliberately. `migrate` only fires when the stored version *differs*, so a blob already stamped with the current version but written by a half-updated build keeps its gaps forever; `merge` runs on every rehydrate, so every load heals whatever it finds. Missing `settings` keys are filled from a fresh seed field by field (`availability` down to its own keys, since a missing `days` array once white-screened the settings page with no way for someone on a phone to recover), and the demo calls are added only for customers that user still has. Nothing is wiped.
 
 Derived (never stored): urgency = f(dueDate, today); balance = total − discount − depositPaid; dashboard stats.
 
@@ -167,6 +223,7 @@ Derived (never stored): urgency = f(dueDate, today); balance = total − discoun
 - **Customers (6):** Adaeze Okafor, Emeka Obi, Funke Adeyemi, Tunde Bakare, Chiamaka Eze, Ibrahim Musa — Nigerian phone formats (+234…), areas (Surulere, Ikeja, Yaba, Lekki…), realistic filled measurement sets.
 - **Orders (8):** staged so the demo lands — 1 **overdue** (red), 2 **due this week** (amber), mix of statuses including 2 delivered, garments: Agbada, Senator, Ankara gown, Kaftan, 2-pc suit trouser…, prices ₦15,000–₦85,000, some with deposits.
 - **Invoices (2):** one paid, one **part-paid** (shows deposit + balance-due math immediately).
+- **Consultations (2):** Chidi Nwosu (a 7th customer with **no measurement sets** — he booked through the open link and that is what the call is for) and Bimbo Ademoye re-checking her sizes. Both are drawn from the real slot generator rather than offset from `now`, so they always land inside the tailor's stated hours on a working day — a demo opened at 11pm would otherwise show a 2am fitting call.
 
 ---
 

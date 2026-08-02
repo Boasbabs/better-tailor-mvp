@@ -45,6 +45,41 @@ export type Invoice = {
 
 export type Currency = '₦' | '€' | '$' | '£' | 'GH₵'
 
+// ---------- consultations ----------
+
+/** WhatsApp needs no link — it dials the phone number we already store. */
+export type CallChannel = 'whatsapp' | 'meet' | 'zoom'
+
+/** One window for every working day. Booking horizon and notice are fixed in
+ *  code (see consult.ts) so the tailor only ever answers three questions. */
+export type Availability = {
+  days: number[] // 0 = Sunday … 6 = Saturday
+  from: string // 'HH:MM' wall clock
+  to: string // 'HH:MM' wall clock
+  slotMins: number
+}
+
+export type ConsultStatus = 'upcoming' | 'done' | 'cancelled'
+
+export type Consultation = {
+  id: string
+  customerId: string
+  name: string // snapshot — the customer may be renamed later
+  phone: string
+  date: string // 'YYYY-MM-DD'
+  time: string // 'HH:MM', the tailor's wall clock
+  durationMins: number
+  channel: CallChannel
+  link: string // meet/zoom room; '' for whatsapp
+  styleId: string // what they want sewn — picks the template below
+  templateId: string
+  photo: string // data-URL thumbnail carried in the link; '' if none
+  photoPending: boolean // true = too big for the link, coming over WhatsApp
+  note: string
+  status: ConsultStatus
+  createdAt: string
+}
+
 export type Settings = {
   businessName: string
   tagline: string
@@ -53,6 +88,9 @@ export type Settings = {
   accountNumber: string
   accountName: string
   currency: Currency
+  callChannel: CallChannel
+  callLink: string
+  availability: Availability
 }
 
 export type Data = {
@@ -60,6 +98,7 @@ export type Data = {
   customers: Customer[]
   orders: Order[]
   invoices: Invoice[]
+  consultations: Consultation[]
   settings: Settings
   bannerDismissed: boolean
 }
