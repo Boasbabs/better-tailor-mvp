@@ -34,6 +34,8 @@ export function makeSeed(): Data {
         name: 'Bimbo Ademoye',
         phone: '+2348031234567',
         area: 'Surulere, Lagos',
+        email: 'bimbo.ademoye@gmail.com',
+        address: '17 Adeniran Ogunsanya St, Surulere',
         gender: 'female',
         sets: [
           { templateId: 't-gown', values: { bust: 38, waist: 31, hip: 42, shoulder: 15, sleeve: 22, 'gown length': 58, back: 14.5 } },
@@ -45,6 +47,8 @@ export function makeSeed(): Data {
         name: 'Layi Wasabi',
         phone: '+2348052345678',
         area: 'Ikeja, Lagos',
+        email: 'layi.w@outlook.com',
+        address: '4 Opebi Rd, Ikeja',
         gender: 'male',
         sets: [
           { templateId: 't-agbada', values: { neck: 16, shoulder: 18, chest: 42, 'sleeve length': 25, 'top length': 32, wrist: 11 } },
@@ -57,6 +61,8 @@ export function makeSeed(): Data {
         name: 'Funke Akindele',
         phone: '+2348063456789',
         area: 'Yaba, Lagos',
+        email: 'funke.akindele@yahoo.com',
+        address: '22 Herbert Macaulay Way, Yaba',
         gender: 'female',
         sets: [
           { templateId: 't-gown', values: { bust: 40, waist: 34, hip: 44, shoulder: 16, sleeve: 24, 'gown length': 60, back: 15 } },
@@ -295,6 +301,21 @@ export function makeSeed(): Data {
         createdAt: agoISO(1),
       },
     ],
+    // A one-person shop. No lock screen, no PINs, nothing different from before
+    // — until the owner adds somebody in settings, which is what switches the
+    // whole multi-staff experience on.
+    staff: [
+      {
+        id: 'st-owner',
+        name: 'Tolu Adeyinka',
+        role: 'owner',
+        pin: '',
+        canSeeContacts: true,
+        lastActiveAt: new Date().toISOString(),
+        createdAt: agoISO(90),
+      },
+    ],
+    currentStaffId: 'st-owner',
     settings: {
       businessName: 'Golden Thread Stitches',
       tagline: 'bespoke tailoring, Lagos',

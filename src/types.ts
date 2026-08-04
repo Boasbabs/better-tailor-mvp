@@ -6,7 +6,11 @@ export type Customer = {
   id: string
   name: string
   phone: string
+  /** Neighbourhood — "Ikoyi". Not a contact channel, so it stays visible to
+   *  everyone; `address` is the one that gets you to someone's door. */
   area: string
+  email?: string
+  address?: string
   gender?: 'male' | 'female'
   sets: MeasurementSet[]
   createdAt: string
@@ -26,6 +30,8 @@ export type Order = {
   deposit: number
   dueDate?: string // ISO date
   status: OrderStatus
+  /** Staff id of whoever is sewing it. '' / undefined = nobody yet. */
+  assignedTo?: string
   notes: string
   createdAt: string
 }
@@ -80,6 +86,25 @@ export type Consultation = {
   createdAt: string
 }
 
+// ---------- staff ----------
+
+export type StaffRole = 'owner' | 'manager' | 'tailor'
+
+export type Staff = {
+  id: string
+  name: string
+  role: StaffRole
+  /** 4 digits. '' means "tap the name and you're in" — only ever allowed for
+   *  the owner, because a forgotten PIN in a localStorage app has no reset
+   *  path and nobody should be locked out of their own shop. */
+  pin: string
+  /** Per-person override on top of the role. Only consulted for tailors —
+   *  owners and managers always see contact details. */
+  canSeeContacts: boolean
+  lastActiveAt: string // ISO; '' = has never signed in
+  createdAt: string
+}
+
 export type Settings = {
   businessName: string
   tagline: string
@@ -99,6 +124,10 @@ export type Data = {
   orders: Order[]
   invoices: Invoice[]
   consultations: Consultation[]
+  staff: Staff[]
+  /** Who is signed in. Survives refreshes — the app only re-locks when someone
+   *  taps "switch user". '' with more than one staff member = show the lock. */
+  currentStaffId: string
   settings: Settings
   bannerDismissed: boolean
 }

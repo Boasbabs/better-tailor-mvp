@@ -5,6 +5,8 @@ import { SubShell } from '../components/shell'
 import { Avatar, FieldLabel, PillButton, inputCls, useToast } from '../components/ui'
 import { CustomerPickerSheet, FabricPickerSheet, StylePickerSheet } from '../components/pickers'
 import { MeasurementGrid } from '../components/measure'
+import { AssigneeSheet, useCan, useIsTeam } from '../components/staff'
+import { MASK_PHONE, masked } from '../perm'
 import { FabricImage, StyleImage, fabricName, styleName } from '../gallery'
 import { track, uid } from '../lib'
 import type { Customer, Order } from '../types'
@@ -34,10 +36,17 @@ export default function OrderForm() {
   const [deposit, setDeposit] = useState(existing && existing.deposit > 0 ? String(existing.deposit) : '')
   const [dueDate, setDueDate] = useState(existing?.dueDate ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
+  const [assignedTo, setAssignedTo] = useState<string | undefined>(existing?.assignedTo)
 
   const [pickCustomer, setPickCustomer] = useState(false)
   const [pickStyle, setPickStyle] = useState(false)
   const [pickFabric, setPickFabric] = useState(false)
+  const [pickAssignee, setPickAssignee] = useState(false)
+
+  const isTeam = useIsTeam()
+  const canAssign = useCan('assignWork')
+  const canSeeContacts = useCan('contacts')
+  const assignee = useStore((s) => s.staff.find((x) => x.id === assignedTo))
 
   const customer = useMemo(() => customers.find((c) => c.id === customerId), [customers, customerId])
   const template = useMemo(() => templates.find((t) => t.id === templateId), [templates, templateId])
@@ -83,6 +92,7 @@ export default function OrderForm() {
       deposit: Number(deposit) || 0,
       dueDate: dueDate || undefined,
       status: existing?.status ?? 'new',
+      assignedTo,
       notes,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
@@ -107,7 +117,7 @@ export default function OrderForm() {
                 <Avatar name={customer.name} />
                 <div className="flex-1 min-w-0">
                   <div className="font-bold truncate">{customer.name}</div>
-                  <div className="text-xs text-ink/50">{customer.phone}</div>
+                  <div className="text-xs text-ink/50">{masked(customer.phone, canSeeContacts, MASK_PHONE)}</div>
                 </div>
               </>
             ) : (
@@ -201,6 +211,29 @@ export default function OrderForm() {
           <input type="date" className={inputCls} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </div>
 
+        {isTeam && canAssign && (
+          <div>
+            <FieldLabel>who is sewing it</FieldLabel>
+            <button
+              onClick={() => setPickAssignee(true)}
+              className="w-full bg-card rounded-2xl shadow-sm p-3 flex items-center gap-3 text-left active:scale-[0.98] transition"
+            >
+              {assignee ? (
+                <>
+                  <Avatar name={assignee.name} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold truncate">{assignee.name}</div>
+                    <div className="text-xs text-ink/50 lowercase">{assignee.role}</div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 text-ink/40 font-semibold py-1.5 px-1">nobody yet…</div>
+              )}
+              <span className="text-ink/30 text-sm font-bold">change</span>
+            </button>
+          </div>
+        )}
+
         <div>
           <FieldLabel>notes</FieldLabel>
           <textarea className={`${inputCls} min-h-20`} placeholder="style details, adjustments…" value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -214,6 +247,7 @@ export default function OrderForm() {
       <CustomerPickerSheet open={pickCustomer} onClose={() => setPickCustomer(false)} onPick={onPickCustomer} />
       <StylePickerSheet open={pickStyle} onClose={() => setPickStyle(false)} selected={styleId} onPick={(s) => { setStyleId(s); setPickStyle(false) }} />
       <FabricPickerSheet open={pickFabric} onClose={() => setPickFabric(false)} selected={fabricId} onPick={(f) => { setFabricId(f); setPickFabric(false) }} />
+      <AssigneeSheet open={pickAssignee} onClose={() => setPickAssignee(false)} selected={assignedTo} onPick={(a) => { setAssignedTo(a); setPickAssignee(false) }} />
     </SubShell>
   )
 }

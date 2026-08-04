@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Consultation, Customer, Data, Invoice, Order, Settings, Template } from './types'
+import type { Consultation, Customer, Data, Invoice, Order, Settings, Staff, Template } from './types'
 import { makeSeed } from './seed'
 
 type Store = Data & {
@@ -17,6 +17,11 @@ type Store = Data & {
   deleteTemplate: (id: string) => void
   addConsultation: (c: Consultation) => void
   updateConsultation: (id: string, patch: Partial<Consultation>) => void
+  addStaff: (s: Staff) => void
+  updateStaff: (id: string, patch: Partial<Staff>) => void
+  deleteStaff: (id: string) => void
+  signIn: (id: string) => void
+  signOut: () => void
   saveSettings: (patch: Partial<Settings>) => void
   dismissBanner: () => void
   resetDemo: () => void
@@ -48,19 +53,38 @@ export const useStore = create<Store>()(
       addConsultation: (c) => set((s) => ({ consultations: [c, ...s.consultations] })),
       updateConsultation: (id, patch) =>
         set((s) => ({ consultations: s.consultations.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+      addStaff: (st) => set((s) => ({ staff: [...s.staff, st] })),
+      updateStaff: (id, patch) =>
+        set((s) => ({ staff: s.staff.map((x) => (x.id === id ? { ...x, ...patch } : x)) })),
+      // Their orders stay put and simply go back to unassigned — deleting a
+      // person must never delete the shop's work.
+      deleteStaff: (id) =>
+        set((s) => ({
+          staff: s.staff.filter((x) => x.id !== id),
+          orders: s.orders.map((o) => (o.assignedTo === id ? { ...o, assignedTo: undefined } : o)),
+          currentStaffId: s.currentStaffId === id ? '' : s.currentStaffId,
+        })),
+      signIn: (id) =>
+        set((s) => ({
+          currentStaffId: id,
+          staff: s.staff.map((x) => (x.id === id ? { ...x, lastActiveAt: new Date().toISOString() } : x)),
+        })),
+      signOut: () => set({ currentStaffId: '' }),
       saveSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
       dismissBanner: () => set({ bannerDismissed: true }),
       resetDemo: () => set({ ...makeSeed() }),
     }),
     {
       name: 'bt_data_v1',
-      version: 2,
+      version: 3,
       partialize: (s) => ({
         templates: s.templates,
         customers: s.customers,
         orders: s.orders,
         invoices: s.invoices,
         consultations: s.consultations,
+        staff: s.staff,
+        currentStaffId: s.currentStaffId,
         settings: s.settings,
         bannerDismissed: s.bannerDismissed,
       }),
@@ -76,16 +100,45 @@ export const useStore = create<Store>()(
         // without a reset — but only the ones whose customer they still have.
         // A call pointing at a deleted customer has nowhere to save measurements.
         const ids = new Set((prev.customers ?? current.customers).map((c) => c.id))
+        const staff = repairStaff(current.staff, prev.staff)
         return {
           ...current,
           ...prev,
           settings: repairSettings(current.settings, prev.settings),
           consultations: prev.consultations ?? current.consultations.filter((c) => ids.has(c.customerId)),
+          staff,
+          currentStaffId: repairCurrentStaff(staff, prev.currentStaffId),
         }
       },
     },
   ),
 )
+
+/**
+ * Everyone who saved data before staff existed comes back as a one-person shop
+ * with themselves as owner — the same state a brand-new visitor gets, so the
+ * app behaves exactly as it did for them until they add somebody.
+ */
+function repairStaff(seed: Staff[], saved?: Staff[]): Staff[] {
+  if (!Array.isArray(saved) || saved.length === 0) return seed
+  const cleaned = saved.filter((s) => s && typeof s.id === 'string' && typeof s.name === 'string')
+  if (cleaned.length === 0) return seed
+  // A shop with no owner can never be administered again, so promote the first
+  // person rather than leaving the staff page permanently unreachable.
+  return cleaned.some((s) => s.role === 'owner')
+    ? cleaned
+    : cleaned.map((s, i) => (i === 0 ? { ...s, role: 'owner' as const } : s))
+}
+
+/**
+ * A saved session pointing at somebody who no longer exists must fall back to
+ * the lock screen, not to an undefined user with no permissions at all. The
+ * one-person shop signs itself straight in — there is nobody to choose between.
+ */
+function repairCurrentStaff(staff: Staff[], saved?: string): string {
+  if (staff.length === 1) return staff[0]!.id
+  return typeof saved === 'string' && staff.some((s) => s.id === saved) ? saved : ''
+}
 
 /**
  * Fills anything the saved settings are missing from the fresh seed, field by

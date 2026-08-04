@@ -4,6 +4,8 @@ import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Avatar, Celebration, Confirm, DuePill, Icons, PillButton } from '../components/ui'
 import { MeasurementGrid } from '../components/measure'
+import { AssigneeSheet, useCan, useIsTeam, useMe } from '../components/staff'
+import { MASK } from '../perm'
 import { FabricImage, StyleImage, fabricName } from '../gallery'
 import { fmtMoney } from '../lib'
 import type { OrderStatus } from '../types'
@@ -28,8 +30,17 @@ export default function OrderDetail() {
   const settings = useStore((s) => s.settings)
   const updateOrder = useStore((s) => s.updateOrder)
   const deleteOrder = useStore((s) => s.deleteOrder)
+  const assignee = useStore((s) => s.staff.find((x) => x.id === order?.assignedTo))
+  const me = useMe()
+  const isTeam = useIsTeam()
+  const canSeeMoney = useCan('money')
+  const canEdit = useCan('editRecords')
+  const canDelete = useCan('deleteRecords')
+  const canAssign = useCan('assignWork')
+  const canInvoice = useCan('invoices')
   const [celebrate, setCelebrate] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [pickAssignee, setPickAssignee] = useState(false)
 
   if (!order) {
     return (
@@ -53,9 +64,11 @@ export default function OrderDetail() {
       title={order.garment}
       backTo="/orders"
       right={
-        <Link to={`/orders/${order.id}/edit`} className="p-2 text-ink/60 active:scale-90 transition" aria-label="edit">
-          {Icons.edit()}
-        </Link>
+        canEdit ? (
+          <Link to={`/orders/${order.id}/edit`} className="p-2 text-ink/60 active:scale-90 transition" aria-label="edit">
+            {Icons.edit()}
+          </Link>
+        ) : undefined
       }
     >
       <div className="space-y-3 pb-8">
@@ -113,20 +126,45 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* money */}
+        {/* who's sewing it */}
+        {isTeam && (
+          <button
+            onClick={() => canAssign && setPickAssignee(true)}
+            className={`w-full bg-card rounded-2xl shadow-sm p-4 flex items-center gap-3 text-left ${
+              canAssign ? 'active:scale-[0.98] transition' : ''
+            }`}
+          >
+            <div className="text-[11px] font-bold uppercase tracking-widest text-ink/40">sewing this</div>
+            <div className="ml-auto flex items-center gap-2 min-w-0">
+              <span className="font-bold text-sm truncate">
+                {assignee ? (assignee.id === me?.id ? `${assignee.name} (you)` : assignee.name) : 'nobody yet'}
+              </span>
+              {canAssign && Icons.chevron('w-5 h-5 text-ink/25 shrink-0')}
+            </div>
+          </button>
+        )}
+
+        {/* money — the card keeps its shape when it's gated so the layout does
+            not shuffle between roles, and so a tailor can see there is a price
+            without being able to read it. */}
         <div className="bg-card rounded-2xl shadow-sm p-4 space-y-2">
           <div className="flex justify-between text-sm font-semibold">
             <span className="text-ink/50">price</span>
-            <span>{fmtMoney(order.price, cur)}</span>
+            <span>{canSeeMoney ? fmtMoney(order.price, cur) : MASK}</span>
           </div>
           <div className="flex justify-between text-sm font-semibold">
             <span className="text-ink/50">deposit paid</span>
-            <span>−{fmtMoney(order.deposit, cur)}</span>
+            <span>{canSeeMoney ? `−${fmtMoney(order.deposit, cur)}` : MASK}</span>
           </div>
           <div className="border-t border-ink/5 pt-2 flex justify-between items-baseline">
             <span className="text-sm font-bold">balance</span>
-            <span className={`font-display font-bold text-2xl ${balance > 0 ? '' : 'text-ok'}`}>{fmtMoney(balance, cur)}</span>
+            {canSeeMoney ? (
+              <span className={`font-display font-bold text-2xl ${balance > 0 ? '' : 'text-ok'}`}>{fmtMoney(balance, cur)}</span>
+            ) : (
+              <span className="font-display font-bold text-2xl text-ink/25">{MASK}</span>
+            )}
           </div>
+          {!canSeeMoney && <div className="text-[11px] text-ink/35 pt-1">prices are owner-only.</div>}
         </div>
 
         {/* measurements */}
@@ -144,14 +182,27 @@ export default function OrderDetail() {
           </div>
         )}
 
-        <PillButton className="w-full" onClick={() => navigate(`/invoice/new?order=${order.id}`)}>
-          create invoice for this order
-        </PillButton>
-        <button onClick={() => setConfirmDelete(true)} className="w-full text-danger font-bold text-sm py-3 active:scale-95 transition">
-          delete order
-        </button>
+        {canInvoice && (
+          <PillButton className="w-full" onClick={() => navigate(`/invoice/new?order=${order.id}`)}>
+            create invoice for this order
+          </PillButton>
+        )}
+        {canDelete && (
+          <button onClick={() => setConfirmDelete(true)} className="w-full text-danger font-bold text-sm py-3 active:scale-95 transition">
+            delete order
+          </button>
+        )}
       </div>
 
+      <AssigneeSheet
+        open={pickAssignee}
+        onClose={() => setPickAssignee(false)}
+        selected={order.assignedTo}
+        onPick={(assignedTo) => {
+          updateOrder(order.id, { assignedTo })
+          setPickAssignee(false)
+        }}
+      />
       <Celebration open={celebrate} onClose={() => setCelebrate(false)} />
       <Confirm
         open={confirmDelete}

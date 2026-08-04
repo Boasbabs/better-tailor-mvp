@@ -4,29 +4,36 @@ import { HomeHeader, HomeShell } from '../components/shell'
 import { OrderCard } from '../components/cards'
 import { Icons, inputCls } from '../components/ui'
 import { WaitlistBanner } from '../components/WaitlistBanner'
+import { useCan, useIsTeam, useMe } from '../components/staff'
 import { dashboardStats, fmtCompact } from '../lib'
 import type { OrderStatus } from '../types'
 
-const FILTERS: ('all' | OrderStatus)[] = ['all', 'new', 'sewing', 'ready', 'delivered']
+type Filter = 'all' | 'mine' | OrderStatus
+
+const FILTERS: Filter[] = ['all', 'new', 'sewing', 'ready', 'delivered']
 
 export default function Orders() {
   const orders = useStore((s) => s.orders)
   const customers = useStore((s) => s.customers)
   const settings = useStore((s) => s.settings)
+  const me = useMe()
+  const isTeam = useIsTeam()
+  const canSeeMoney = useCan('money')
   const [q, setQ] = useState('')
-  const [filter, setFilter] = useState<'all' | OrderStatus>('all')
+  // Land a tailor on their own bench; a solo shop has no "mine" to speak of.
+  const [filter, setFilter] = useState<Filter>(isTeam && !canSeeMoney ? 'mine' : 'all')
 
   const stats = useMemo(() => dashboardStats(orders), [orders])
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase()
     return orders.filter((o) => {
-      if (filter !== 'all' && o.status !== filter) return false
+      if (filter === 'mine' ? o.assignedTo !== me?.id : filter !== 'all' && o.status !== filter) return false
       if (!ql) return true
       const cust = customers.find((c) => c.id === o.customerId)
       return o.garment.toLowerCase().includes(ql) || (cust?.name.toLowerCase().includes(ql) ?? false)
     })
-  }, [orders, customers, q, filter])
+  }, [orders, customers, q, filter, me?.id])
 
   return (
     <HomeShell active="orders">
@@ -45,10 +52,15 @@ export default function Orders() {
             </div>
             <div className="text-[11px] font-bold text-ink/45 lowercase">overdue</div>
           </div>
-          <div>
-            <div className="font-display font-bold text-2xl leading-none">{fmtCompact(stats.unpaid, settings.currency)}</div>
-            <div className="text-[11px] font-bold text-ink/45 lowercase">unpaid</div>
-          </div>
+          {/* The unpaid figure is the shop's takings. Rather than dot it out
+              and leave a teasing gap, the strip simply drops to two numbers —
+              both of which a tailor genuinely needs. */}
+          {canSeeMoney && (
+            <div>
+              <div className="font-display font-bold text-2xl leading-none">{fmtCompact(stats.unpaid, settings.currency)}</div>
+              <div className="text-[11px] font-bold text-ink/45 lowercase">unpaid</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -60,7 +72,7 @@ export default function Orders() {
         <input className={`${inputCls} pl-11`} placeholder="search garment or customer…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="mt-3 flex gap-1.5 overflow-x-auto -mx-4 px-4 pb-1">
-        {FILTERS.map((f) => (
+        {(isTeam ? (['mine', ...FILTERS] as Filter[]) : FILTERS).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}

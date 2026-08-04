@@ -318,6 +318,18 @@ export const Icons = {
       <path d="M14 10.5a4 4 0 0 0-5.7-.4l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7" />
     </svg>
   ),
+  lock: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="10.5" width="16" height="11" rx="2.6" />
+      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+    </svg>
+  ),
+  switchUser: (c?: string) => (
+    <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 9.5A8.5 8.5 0 0 1 18 5.6l2.5 2.2M20.5 14.5A8.5 8.5 0 0 1 6 18.4L3.5 16.2" />
+      <path d="M20.5 3.8v4h-4M3.5 20.2v-4h4" />
+    </svg>
+  ),
   heart: (c?: string) => (
     <svg viewBox="0 0 24 24" className={c ?? 'w-5 h-5'} fill="currentColor">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />

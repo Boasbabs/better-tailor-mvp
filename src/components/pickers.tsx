@@ -3,6 +3,8 @@ import type { Customer } from '../types'
 import { useStore } from '../store'
 import { track, uid } from '../lib'
 import { Avatar, Icons, inputCls, Sheet, useToast } from './ui'
+import { useCan } from './staff'
+import { MASK_PHONE, masked } from '../perm'
 import { FABRICS, FabricImage, STYLES, StyleImage } from '../gallery'
 
 export function CustomerPickerSheet({
@@ -16,6 +18,9 @@ export function CustomerPickerSheet({
 }) {
   const customers = useStore((s) => s.customers)
   const addCustomer = useStore((s) => s.addCustomer)
+  // Only intake roles reach this sheet at all, but the masking rule holds
+  // wherever a number is drawn — one exempt surface is all it takes.
+  const canSeeContacts = useCan('contacts')
   const [q, setQ] = useState('')
   const [quickAdd, setQuickAdd] = useState(false)
   const [name, setName] = useState('')
@@ -57,7 +62,9 @@ export function CustomerPickerSheet({
             <Avatar name={c.name} />
             <div className="min-w-0">
               <div className="font-bold truncate">{c.name}</div>
-              <div className="text-xs text-ink/50">{c.phone || 'no phone'}</div>
+              <div className="text-xs text-ink/50">
+                {c.phone ? masked(c.phone, canSeeContacts, MASK_PHONE) : 'no phone'}
+              </div>
             </div>
           </button>
         ))}

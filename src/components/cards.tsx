@@ -2,10 +2,15 @@ import { Link } from 'react-router-dom'
 import type { Order } from '../types'
 import { useStore } from '../store'
 import { DuePill, StatusPill } from './ui'
+import { useIsTeam, useMe } from './staff'
 import { FabricImage } from '../gallery'
 
 export function OrderCard({ order }: { order: Order }) {
   const customer = useStore((s) => s.customers.find((c) => c.id === order.customerId))
+  const assignee = useStore((s) => s.staff.find((x) => x.id === order.assignedTo))
+  const me = useMe()
+  const isTeam = useIsTeam()
+
   return (
     <Link
       to={`/orders/${order.id}`}
@@ -19,6 +24,17 @@ export function OrderCard({ order }: { order: Order }) {
           <StatusPill status={order.status} />
           {order.status !== 'delivered' && <DuePill dueDate={order.dueDate} />}
         </div>
+        {/* Only a shop with staff has an assignment worth naming — and only an
+            unfinished order still needs somebody at the machine. */}
+        {isTeam && order.status !== 'delivered' && (
+          <div className="text-[11px] font-bold text-ink/35 mt-1.5 truncate">
+            {assignee
+              ? assignee.id === me?.id
+                ? '● assigned to you'
+                : `● ${assignee.name}`
+              : '○ nobody assigned'}
+          </div>
+        )}
       </div>
     </Link>
   )

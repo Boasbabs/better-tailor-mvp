@@ -5,6 +5,7 @@ import { HomeHeader, HomeShell } from '../components/shell'
 import { Icons, PillButton } from '../components/ui'
 import { ConsultCard } from '../components/consult'
 import { WaitlistBanner } from '../components/WaitlistBanner'
+import { useCan } from '../components/staff'
 import { consultUrgency, dayLabel, fmtTime, slotDate, whenLabel } from '../consult'
 import type { Consultation } from '../types'
 
@@ -19,6 +20,7 @@ const imminent = (c: Consultation) => slotDate(c.date, c.time).getTime() - Date.
 export default function Consultations() {
   const navigate = useNavigate()
   const consultations = useStore((s) => s.consultations)
+  const canEdit = useCan('editRecords')
   const [filter, setFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming')
 
   const upcoming = useMemo(() => consultations.filter((c) => !isPast(c)).sort(byWhen), [consultations])
@@ -92,9 +94,13 @@ export default function Consultations() {
         </>
       )}
 
-      <PillButton className="w-full mt-4 flex items-center justify-center gap-2" onClick={() => navigate('/consult/share')}>
-        {Icons.link('w-[18px] h-[18px]')} send a booking link
-      </PillButton>
+      {/* The share screen hands the link over on WhatsApp, addressed to a
+          customer's number — intake, and the boss's job. */}
+      {canEdit && (
+        <PillButton className="w-full mt-4 flex items-center justify-center gap-2" onClick={() => navigate('/consult/share')}>
+          {Icons.link('w-[18px] h-[18px]')} send a booking link
+        </PillButton>
+      )}
     </HomeShell>
   )
 }

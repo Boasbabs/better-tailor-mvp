@@ -4,11 +4,14 @@ import { useStore } from '../store'
 import { HomeHeader, HomeShell } from '../components/shell'
 import { Avatar, Icons, inputCls } from '../components/ui'
 import { WaitlistBanner } from '../components/WaitlistBanner'
+import { useCan } from '../components/staff'
+import { MASK_PHONE, masked } from '../perm'
 import { waPhone } from '../lib'
 
 export default function Customers() {
   const customers = useStore((s) => s.customers)
   const orders = useStore((s) => s.orders)
+  const canSeeContacts = useCan('contacts')
   const [q, setQ] = useState('')
 
   const filtered = useMemo(
@@ -34,16 +37,18 @@ export default function Customers() {
                 <Avatar name={c.name} />
                 <div className="min-w-0">
                   <div className="font-bold truncate">{c.name}</div>
+                  {/* area is a neighbourhood, not a way to reach anyone, so it
+                      stays legible even when the phone number doesn't */}
                   <div className="text-xs text-ink/50 truncate">
-                    {c.phone}
-                    {c.area ? ` · ${c.area}` : ''}
+                    {masked(c.phone, canSeeContacts, MASK_PHONE)}
+                    {c.area ? `${c.phone ? ' · ' : ''}${c.area}` : ''}
                   </div>
                   <div className="text-[11px] font-bold text-ink/35 mt-0.5">
                     {count} order{count === 1 ? '' : 's'}
                   </div>
                 </div>
               </Link>
-              {c.phone && (
+              {c.phone && canSeeContacts && (
                 <>
                   <a href={`tel:${c.phone}`} className="w-10 h-10 rounded-full bg-card2 grid place-items-center text-ink active:scale-90 transition" aria-label="call">
                     {Icons.phone('w-4 h-4')}

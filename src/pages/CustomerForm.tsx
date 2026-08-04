@@ -16,6 +16,8 @@ export default function CustomerForm() {
 
   const [name, setName] = useState(existing?.name ?? '')
   const [phone, setPhone] = useState(existing?.phone ?? '')
+  const [email, setEmail] = useState(existing?.email ?? '')
+  const [address, setAddress] = useState(existing?.address ?? '')
   const [area, setArea] = useState(existing?.area ?? '')
   const [gender, setGender] = useState<'male' | 'female' | undefined>(existing?.gender)
 
@@ -23,17 +25,22 @@ export default function CustomerForm() {
 
   const save = () => {
     if (!name.trim()) return show('name is required')
+    const contact = {
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      address: address.trim(),
+      area: area.trim(),
+      gender,
+    }
     if (editing && existing) {
-      updateCustomer(existing.id, { name: name.trim(), phone: phone.trim(), area: area.trim(), gender })
+      updateCustomer(existing.id, contact)
       navigate(-1)
       return
     }
     const c: Customer = {
       id: uid(),
-      name: name.trim(),
-      phone: phone.trim(),
-      area: area.trim(),
-      gender,
+      ...contact,
       sets: [],
       createdAt: new Date().toISOString(),
     }
@@ -53,6 +60,17 @@ export default function CustomerForm() {
           <FieldLabel>phone (with country code)</FieldLabel>
           <input className={inputCls} placeholder="+234 803 123 4567" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <p className="text-[11px] text-ink/35 mt-1.5 ml-1">the country code makes WhatsApp sharing work.</p>
+        </div>
+        <div>
+          <FieldLabel>email (optional)</FieldLabel>
+          <input className={inputCls} placeholder="name@example.com" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div>
+          <FieldLabel>address (optional)</FieldLabel>
+          <input className={inputCls} placeholder="e.g. 17 Adeniran Ogunsanya St" value={address} onChange={(e) => setAddress(e.target.value)} />
+          <p className="text-[11px] text-ink/35 mt-1.5 ml-1">
+            phone, email and address are hidden from staff unless you allow it.
+          </p>
         </div>
         <div>
           <FieldLabel>area / city</FieldLabel>

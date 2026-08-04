@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icons, Sheet, TabIcon, type TabName } from './ui'
+import { useCan } from './staff'
 
 export function Wordmark({ className = 'text-lg' }: { className?: string }) {
   return <span className={`font-display font-bold lowercase tracking-tight ${className}`}>better tailor</span>
@@ -78,6 +79,10 @@ function Tab({ to, label, name, active }: { to: string; label: string; name: Tab
 export function TabBar({ active }: { active: TabName }) {
   const [fabOpen, setFabOpen] = useState(false)
   const navigate = useNavigate()
+  // Intake — new orders, new customers, invoices, booking links — is the
+  // boss's job. A tailor's + sheet would be empty, so they get no +.
+  const canCreate = useCan('editRecords')
+  const canInvoice = useCan('invoices')
   const go = (path: string) => {
     setFabOpen(false)
     navigate(path)
@@ -86,20 +91,27 @@ export function TabBar({ active }: { active: TabName }) {
     <>
       {/* Four equal tabs; the + still floats clear of the row so it reads as a
           primary action rather than a fifth, oddly-shaped tab — the arrangement
-          Jobber and Squarespace both use at this count. */}
+          Jobber and Squarespace both use at this count. Drop invoices and the
+          row becomes three, which the same grid handles without a gap. */}
       <nav className="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
         <div className="max-w-md mx-auto relative">
-          <button
-            onClick={() => setFabOpen(true)}
-            aria-label="create"
-            className="pointer-events-auto absolute right-5 -top-[4.5rem] w-14 h-14 rounded-full bg-ink text-white grid place-items-center shadow-[0_8px_24px_rgba(17,17,17,0.28)] active:scale-90 transition"
+          {canCreate && (
+            <button
+              onClick={() => setFabOpen(true)}
+              aria-label="create"
+              className="pointer-events-auto absolute right-5 -top-[4.5rem] w-14 h-14 rounded-full bg-ink text-white grid place-items-center shadow-[0_8px_24px_rgba(17,17,17,0.28)] active:scale-90 transition"
+            >
+              {Icons.plus()}
+            </button>
+          )}
+          <div
+            className={`pointer-events-auto bg-card rounded-t-3xl shadow-[0_-6px_24px_rgba(17,17,17,0.08)] grid px-1 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] ${
+              canInvoice ? 'grid-cols-4' : 'grid-cols-3'
+            }`}
           >
-            {Icons.plus()}
-          </button>
-          <div className="pointer-events-auto bg-card rounded-t-3xl shadow-[0_-6px_24px_rgba(17,17,17,0.08)] grid grid-cols-4 px-1 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <Tab to="/orders" label="orders" name="orders" active={active === 'orders'} />
             <Tab to="/customers" label="customers" name="customers" active={active === 'customers'} />
-            <Tab to="/invoices" label="invoices" name="invoices" active={active === 'invoices'} />
+            {canInvoice && <Tab to="/invoices" label="invoices" name="invoices" active={active === 'invoices'} />}
             <Tab to="/consultations" label="calls" name="calls" active={active === 'calls'} />
           </div>
         </div>
@@ -108,11 +120,11 @@ export function TabBar({ active }: { active: TabName }) {
       <Sheet open={fabOpen} onClose={() => setFabOpen(false)} title="create">
         <div className="space-y-2">
           {[
-            { label: 'book a fitting call', sub: 'send a link — measure them on a call', path: '/consult/share', icon: Icons.video() },
-            { label: 'new order', sub: 'garment, measurements & due date', path: '/order/new', icon: Icons.shirt() },
-            { label: 'new customer', sub: 'name, phone & measurement sets', path: '/customer/new', icon: Icons.people() },
-            { label: 'new invoice', sub: 'line items, deposit & balance due', path: '/invoice/new', icon: Icons.receipt() },
-          ].map((a) => (
+            { label: 'book a fitting call', sub: 'send a link — measure them on a call', path: '/consult/share', icon: Icons.video(), need: true },
+            { label: 'new order', sub: 'garment, measurements & due date', path: '/order/new', icon: Icons.shirt(), need: true },
+            { label: 'new customer', sub: 'name, phone & measurement sets', path: '/customer/new', icon: Icons.people(), need: true },
+            { label: 'new invoice', sub: 'line items, deposit & balance due', path: '/invoice/new', icon: Icons.receipt(), need: canInvoice },
+          ].filter((a) => a.need).map((a) => (
             <button
               key={a.path}
               onClick={() => go(a.path)}

@@ -4,6 +4,8 @@ import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Avatar, Confirm, Icons, PillButton, useToast } from '../components/ui'
 import { WhenPill } from '../components/consult'
+import { LockedNote, useCan } from '../components/staff'
+import { MASK_PHONE, masked } from '../perm'
 import { StyleImage, styleName } from '../gallery'
 import {
   channelName,
@@ -33,6 +35,9 @@ export default function ConsultDetail() {
   const customer = useStore((s) => s.customers.find((c) => c.id === consultation?.customerId))
   const updateConsultation = useStore((s) => s.updateConsultation)
   const updateCustomer = useStore((s) => s.updateCustomer)
+  const canSeeContacts = useCan('contacts')
+  const canEdit = useCan('editRecords')
+  const canDelete = useCan('deleteRecords')
   const [confirmCancel, setConfirmCancel] = useState(false)
 
   const templateId = consultation?.templateId ?? ''
@@ -91,7 +96,9 @@ export default function ConsultDetail() {
           <Avatar name={consultation.name} />
           <div className="flex-1 min-w-0">
             <div className="font-bold truncate">{consultation.name}</div>
-            <div className="text-xs text-ink/50">{consultation.phone || 'no phone'}</div>
+            <div className="text-xs text-ink/50">
+              {consultation.phone ? masked(consultation.phone, canSeeContacts, MASK_PHONE) : 'no phone'}
+            </div>
           </div>
           {customer && (
             <Link to={`/customers/${customer.id}`} className="shrink-0 text-xs font-bold text-ink/40 bg-card2 rounded-full px-3 py-2 active:scale-95 transition">
@@ -121,18 +128,23 @@ export default function ConsultDetail() {
           </div>
         )}
 
-        {/* start the call */}
-        {live && (
-          <button
-            onClick={startCall}
-            className={`w-full rounded-full font-bold py-4 flex items-center justify-center gap-2 active:scale-95 transition ${
-              consultation.channel === 'whatsapp' ? 'bg-wa text-white' : 'bg-ink text-white'
-            }`}
-          >
-            {consultation.channel === 'whatsapp' ? Icons.whatsapp('w-5 h-5') : Icons.video()}
-            {urgency === 'now' ? 'start the call now' : `start the ${channelName(consultation.channel).toLowerCase()}`}
-          </button>
-        )}
+        {/* Start the call. A Meet or Zoom room is the shop's own link and gives
+            nothing away, so anyone can join one; a WhatsApp call dials the
+            customer's number and puts it on screen, so it needs contacts. */}
+        {live &&
+          (consultation.channel !== 'whatsapp' || canSeeContacts ? (
+            <button
+              onClick={startCall}
+              className={`w-full rounded-full font-bold py-4 flex items-center justify-center gap-2 active:scale-95 transition ${
+                consultation.channel === 'whatsapp' ? 'bg-wa text-white' : 'bg-ink text-white'
+              }`}
+            >
+              {consultation.channel === 'whatsapp' ? Icons.whatsapp('w-5 h-5') : Icons.video()}
+              {urgency === 'now' ? 'start the call now' : `start the ${channelName(consultation.channel).toLowerCase()}`}
+            </button>
+          ) : (
+            <LockedNote>the owner starts this call — you take the measurements</LockedNote>
+          ))}
 
         {/* measurements */}
         <div className="mt-2">
@@ -208,7 +220,7 @@ export default function ConsultDetail() {
             >
               mark this call done
             </PillButton>
-            {consultation.phone && (
+            {consultation.phone && canSeeContacts && (
               <a
                 href={waLink(consultation.phone, reminderMessage(consultation, settings))}
                 target="_blank"
@@ -218,13 +230,15 @@ export default function ConsultDetail() {
                 {Icons.whatsapp('w-[18px] h-[18px]')} send a reminder
               </a>
             )}
-            <button onClick={() => setConfirmCancel(true)} className="w-full text-danger font-bold text-sm py-3 active:scale-95 transition">
-              cancel this call
-            </button>
+            {canDelete && (
+              <button onClick={() => setConfirmCancel(true)} className="w-full text-danger font-bold text-sm py-3 active:scale-95 transition">
+                cancel this call
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-2 pt-2">
-            {customer && consultation.status === 'done' && (
+            {customer && consultation.status === 'done' && canEdit && (
               <PillButton className="w-full" onClick={() => navigate(`/order/new?customer=${customer.id}`)}>
                 start an order for {consultation.name.split(' ')[0]}
               </PillButton>

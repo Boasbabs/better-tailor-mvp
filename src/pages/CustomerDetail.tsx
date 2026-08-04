@@ -5,6 +5,8 @@ import { SubShell } from '../components/shell'
 import { Avatar, Confirm, Icons, PillButton, Sheet } from '../components/ui'
 import { MeasurementGrid } from '../components/measure'
 import { OrderCard } from '../components/cards'
+import { LockedNote, useCan } from '../components/staff'
+import { MASK, MASK_PHONE, masked } from '../perm'
 import { waPhone } from '../lib'
 import type { MeasurementSet } from '../types'
 
@@ -17,6 +19,9 @@ export default function CustomerDetail() {
   const orders = useMemo(() => allOrders.filter((o) => o.customerId === id), [allOrders, id])
   const updateCustomer = useStore((s) => s.updateCustomer)
   const deleteCustomer = useStore((s) => s.deleteCustomer)
+  const canSeeContacts = useCan('contacts')
+  const canEdit = useCan('editRecords')
+  const canDelete = useCan('deleteRecords')
   const [openSet, setOpenSet] = useState<string | null>(null)
   const [addSet, setAddSet] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -70,9 +75,11 @@ export default function CustomerDetail() {
       title={customer.name}
       backTo="/customers"
       right={
-        <Link to={`/customers/${customer.id}/edit`} className="p-2 text-ink/60 active:scale-90 transition" aria-label="edit">
-          {Icons.edit()}
-        </Link>
+        canEdit ? (
+          <Link to={`/customers/${customer.id}/edit`} className="p-2 text-ink/60 active:scale-90 transition" aria-label="edit">
+            {Icons.edit()}
+          </Link>
+        ) : undefined
       }
     >
       <div className="space-y-3 pb-8">
@@ -81,39 +88,59 @@ export default function CustomerDetail() {
           <Avatar name={customer.name} size="lg" />
           <div className="flex-1 min-w-0">
             <div className="font-display font-bold text-lg leading-tight truncate">{customer.name}</div>
-            <div className="text-sm text-ink/50 font-medium">{customer.phone || 'no phone'}</div>
+            <div className="text-sm text-ink/50 font-medium">
+              {customer.phone ? masked(customer.phone, canSeeContacts, MASK_PHONE) : 'no phone'}
+            </div>
+            {customer.email && (
+              <div className="text-xs text-ink/40 truncate">{masked(customer.email, canSeeContacts)}</div>
+            )}
+            {customer.address && (
+              <div className="text-xs text-ink/40 truncate">{masked(customer.address, canSeeContacts)}</div>
+            )}
             {customer.area && <div className="text-xs text-ink/40">{customer.area}</div>}
           </div>
         </div>
-        {customer.phone && (
-          <div className="grid grid-cols-2 gap-2">
-            <a href={`tel:${customer.phone}`} className="bg-card shadow-sm rounded-full font-bold py-3 text-center text-sm active:scale-95 transition flex items-center justify-center gap-2">
-              {Icons.phone('w-4 h-4')} call
-            </a>
-            <a
-              href={`https://wa.me/${waPhone(customer.phone)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-wa text-white rounded-full font-bold py-3 text-center text-sm active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              {Icons.whatsapp('w-[18px] h-[18px]')} whatsapp
-            </a>
-          </div>
-        )}
 
-        <button
-          onClick={() => navigate(`/consult/share?customer=${customer.id}`)}
-          className="w-full bg-card shadow-sm rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.98] transition text-left"
-        >
-          <div className="w-10 h-10 shrink-0 rounded-full bg-ink text-white grid place-items-center">
-            {Icons.video('w-[18px] h-[18px]')}
-          </div>
-          <div className="min-w-0">
-            <div className="font-bold text-sm lowercase">book a fitting call</div>
-            <div className="text-xs text-ink/45">send a link to take their measurements together</div>
-          </div>
-          {Icons.chevron('w-5 h-5 text-ink/25 ml-auto shrink-0')}
-        </button>
+        {/* Every route to the number is one control: tel:, wa.me and the
+            booking link all put the digits somewhere readable, so they leave
+            together or not at all. */}
+        {!canSeeContacts ? (
+          <LockedNote>contact details are owner-only</LockedNote>
+        ) : (
+          <>
+            {customer.phone && (
+              <div className="grid grid-cols-2 gap-2">
+                <a href={`tel:${customer.phone}`} className="bg-card shadow-sm rounded-full font-bold py-3 text-center text-sm active:scale-95 transition flex items-center justify-center gap-2">
+                  {Icons.phone('w-4 h-4')} call
+                </a>
+                <a
+                  href={`https://wa.me/${waPhone(customer.phone)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-wa text-white rounded-full font-bold py-3 text-center text-sm active:scale-95 transition flex items-center justify-center gap-2"
+                >
+                  {Icons.whatsapp('w-[18px] h-[18px]')} whatsapp
+                </a>
+              </div>
+            )}
+
+            {canEdit && (
+              <button
+                onClick={() => navigate(`/consult/share?customer=${customer.id}`)}
+                className="w-full bg-card shadow-sm rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.98] transition text-left"
+              >
+                <div className="w-10 h-10 shrink-0 rounded-full bg-ink text-white grid place-items-center">
+                  {Icons.video('w-[18px] h-[18px]')}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-sm lowercase">book a fitting call</div>
+                  <div className="text-xs text-ink/45">send a link to take their measurements together</div>
+                </div>
+                {Icons.chevron('w-5 h-5 text-ink/25 ml-auto shrink-0')}
+              </button>
+            )}
+          </>
+        )}
 
         {/* measurement sets */}
         <div className="flex items-center justify-between mt-2">
@@ -151,9 +178,14 @@ export default function CustomerDetail() {
                     onChange={(f, v) => setValue(set.templateId, f, v)}
                     onAddField={(name) => addFieldToSet(set.templateId, name)}
                   />
-                  <button onClick={() => removeSet(set.templateId)} className="mt-3 text-danger text-xs font-bold active:scale-95 transition">
-                    remove this set
-                  </button>
+                  {/* Recording measurements is the tailor's actual job, so the
+                      grid stays live for them — throwing a whole set away is
+                      not, and that is what `deleteRecords` guards. */}
+                  {canDelete && (
+                    <button onClick={() => removeSet(set.templateId)} className="mt-3 text-danger text-xs font-bold active:scale-95 transition">
+                      remove this set
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -172,12 +204,16 @@ export default function CustomerDetail() {
           <div className="bg-card2 rounded-2xl p-5 text-center text-sm text-ink/40 font-medium">no orders yet.</div>
         )}
 
-        <PillButton className="w-full" onClick={() => navigate(`/order/new?customer=${customer.id}`)}>
-          new order for {customer.name.split(' ')[0]}
-        </PillButton>
-        <button onClick={() => setConfirmDelete(true)} className="w-full text-danger font-bold text-sm py-3 active:scale-95 transition">
-          delete customer
-        </button>
+        {canEdit && (
+          <PillButton className="w-full" onClick={() => navigate(`/order/new?customer=${customer.id}`)}>
+            new order for {customer.name.split(' ')[0]}
+          </PillButton>
+        )}
+        {canDelete && (
+          <button onClick={() => setConfirmDelete(true)} className="w-full text-danger font-bold text-sm py-3 active:scale-95 transition">
+            delete customer
+          </button>
+        )}
       </div>
 
       <Sheet open={addSet} onClose={() => setAddSet(false)} title="add measurement set">
