@@ -157,13 +157,16 @@ export default function InvoiceNew() {
             {manual.map((m) => (
               <div key={m.id} className="flex gap-2">
                 <input
-                  className={`${inputCls} flex-1`}
+                  className={`${inputCls} flex-1 min-w-0`}
                   placeholder="e.g. fabric purchase"
                   value={m.label}
                   onChange={(e) => setManual(manual.map((x) => (x.id === m.id ? { ...x, label: e.target.value } : x)))}
                 />
+                {/* sized with flex-basis, not width: `inputCls` already carries
+                    `w-full`, and a `w-28` alongside it loses the cascade — which
+                    is what squashed the label field to a strip of padding. */}
                 <input
-                  className={`${inputCls} w-28`}
+                  className={`${inputCls} basis-28 grow-0 shrink-0`}
                   placeholder="0"
                   inputMode="numeric"
                   value={m.amount}
