@@ -1,6 +1,18 @@
 import { useState } from 'react'
 import { Icons } from './ui'
 
+/**
+ * The fields this grid actually renders: the template's, in order, then any
+ * one-off fields `+ add field` put on this particular set.
+ *
+ * Exported because anything that *counts* these fields has to count the same
+ * list the tailor can see. Deriving the count from `template.fields` alone
+ * silently undercounts every set carrying a custom field.
+ */
+export function renderedFields(fields: string[], values: Record<string, number | string>): string[] {
+  return [...fields, ...Object.keys(values).filter((k) => !fields.includes(k))]
+}
+
 // Editable measurement chips grid: label on top, value input below.
 export function MeasurementGrid({
   fields,
@@ -17,8 +29,7 @@ export function MeasurementGrid({
 }) {
   const [adding, setAdding] = useState(false)
   const [newField, setNewField] = useState('')
-  const extras = Object.keys(values).filter((k) => !fields.includes(k))
-  const all = [...fields, ...extras]
+  const all = renderedFields(fields, values)
 
   const commitAdd = () => {
     const name = newField.trim().toLowerCase()
