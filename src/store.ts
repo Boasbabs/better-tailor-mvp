@@ -13,6 +13,7 @@ type Store = Data & {
   addInvoice: (i: Invoice) => void
   updateInvoice: (id: string, patch: Partial<Invoice>) => void
   addTemplate: (t: Template) => void
+  addTemplates: (ts: Template[]) => void
   updateTemplate: (id: string, patch: Partial<Template>) => void
   deleteTemplate: (id: string) => void
   addConsultation: (c: Consultation) => void
@@ -42,6 +43,10 @@ export const useStore = create<Store>()(
       updateInvoice: (id, patch) =>
         set((s) => ({ invoices: s.invoices.map((i) => (i.id === id ? { ...i, ...patch } : i)) })),
       addTemplate: (t) => set((s) => ({ templates: [...s.templates, t] })),
+      // Prepends, unlike addTemplate. What the tailor defined at signup is the
+      // work she actually does, so it outranks the five we shipped — and the
+      // batch keeps onboarding's "write everything on start" a single update.
+      addTemplates: (ts) => set((s) => ({ templates: [...ts, ...s.templates] })),
       updateTemplate: (id, patch) =>
         set((s) => ({ templates: s.templates.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
       deleteTemplate: (id) => set((s) => ({ templates: s.templates.filter((t) => t.id !== id) })),
