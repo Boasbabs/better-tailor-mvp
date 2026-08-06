@@ -160,6 +160,16 @@ export function trackConsult(event: ConsultEvent) {
   count(`consult/${event}`)
 }
 
+// Namespaced for the same reason consultations are: `opened` is the funnel
+// baseline and has to stay comparable across builds, so onboarding never fires
+// it twice. `template-added` fires once per template, which makes the event
+// count itself the answer to "how many do tailors define at signup?".
+export type OnboardEvent = 'template-added' | 'templates-skipped'
+
+export function trackOnboard(event: OnboardEvent) {
+  count(`onboard/${event}`)
+}
+
 export type WaitlistSource = 'orders' | 'calls' | 'customers' | 'invoices' | 'settings'
 
 // Fires the canonical funnel event *and* a per-surface breakdown. Keeping the
