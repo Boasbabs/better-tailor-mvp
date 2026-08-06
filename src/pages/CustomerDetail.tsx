@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Avatar, Confirm, Icons, PillButton, Sheet } from '../components/ui'
-import { MeasurementGrid } from '../components/measure'
+import { MeasurementGrid, renderedFields } from '../components/measure'
 import { OrderCard } from '../components/cards'
 import { waPhone } from '../lib'
 import type { MeasurementSet } from '../types'
@@ -101,6 +101,20 @@ export default function CustomerDetail() {
           </div>
         )}
 
+        <button
+          onClick={() => navigate(`/consult/share?customer=${customer.id}`)}
+          className="w-full bg-card shadow-sm rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.98] transition text-left"
+        >
+          <div className="w-10 h-10 shrink-0 rounded-full bg-ink text-white grid place-items-center">
+            {Icons.video('w-[18px] h-[18px]')}
+          </div>
+          <div className="min-w-0">
+            <div className="font-bold text-sm lowercase">book a fitting call</div>
+            <div className="text-xs text-ink/45">send a link to take their measurements together</div>
+          </div>
+          {Icons.chevron('w-5 h-5 text-ink/25 ml-auto shrink-0')}
+        </button>
+
         {/* measurement sets */}
         <div className="flex items-center justify-between mt-2">
           <h2 className="font-display font-bold lowercase">measurements</h2>
@@ -116,7 +130,10 @@ export default function CustomerDetail() {
         {customer.sets.map((set) => {
           const t = templates.find((x) => x.id === set.templateId)
           const fields = t?.fields ?? Object.keys(set.values)
-          const filled = fields.filter((f) => set.values[f] !== undefined && set.values[f] !== '').length
+          // Count over what the grid shows, custom fields included — otherwise a
+          // set carrying one can never read as complete.
+          const shown = renderedFields(fields, set.values)
+          const filled = shown.filter((f) => set.values[f] !== undefined && set.values[f] !== '').length
           const open = openSet === set.templateId
           return (
             <div key={set.templateId} className="bg-card rounded-2xl shadow-sm">
@@ -124,7 +141,7 @@ export default function CustomerDetail() {
                 <div className="text-left">
                   <div className="font-bold">{t?.name ?? 'Custom set'}</div>
                   <div className="text-xs text-ink/45">
-                    {filled}/{Math.max(fields.length, Object.keys(set.values).length)} measurements filled
+                    {filled}/{shown.length} measurements filled
                   </div>
                 </div>
                 <span className="text-ink/30">{open ? Icons.up() : Icons.down()}</span>

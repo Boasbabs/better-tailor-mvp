@@ -84,8 +84,9 @@ export function TabBar({ active }: { active: TabName }) {
   }
   return (
     <>
-      {/* Three equal tabs; the + floats clear of the row so it reads as a primary
-          action rather than a fourth, oddly-shaped tab. */}
+      {/* Four equal tabs; the + still floats clear of the row so it reads as a
+          primary action rather than a fifth, oddly-shaped tab — the arrangement
+          Jobber and Squarespace both use at this count. */}
       <nav className="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
         <div className="max-w-md mx-auto relative">
           <button
@@ -95,10 +96,11 @@ export function TabBar({ active }: { active: TabName }) {
           >
             {Icons.plus()}
           </button>
-          <div className="pointer-events-auto bg-card rounded-t-3xl shadow-[0_-6px_24px_rgba(17,17,17,0.08)] grid grid-cols-3 px-2 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="pointer-events-auto bg-card rounded-t-3xl shadow-[0_-6px_24px_rgba(17,17,17,0.08)] grid grid-cols-4 px-1 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <Tab to="/orders" label="orders" name="orders" active={active === 'orders'} />
             <Tab to="/customers" label="customers" name="customers" active={active === 'customers'} />
             <Tab to="/invoices" label="invoices" name="invoices" active={active === 'invoices'} />
+            <Tab to="/consultations" label="calls" name="calls" active={active === 'calls'} />
           </div>
         </div>
       </nav>
@@ -106,6 +108,7 @@ export function TabBar({ active }: { active: TabName }) {
       <Sheet open={fabOpen} onClose={() => setFabOpen(false)} title="create">
         <div className="space-y-2">
           {[
+            { label: 'book a fitting call', sub: 'send a link — measure them on a call', path: '/consult/share', icon: Icons.video() },
             { label: 'new order', sub: 'garment, measurements & due date', path: '/order/new', icon: Icons.shirt() },
             { label: 'new customer', sub: 'name, phone & measurement sets', path: '/customer/new', icon: Icons.people() },
             { label: 'new invoice', sub: 'line items, deposit & balance due', path: '/invoice/new', icon: Icons.receipt() },

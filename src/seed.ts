@@ -1,7 +1,21 @@
-import type { Data } from './types'
-import { isoDaysFromNow } from './lib'
+import type { Availability, Data } from './types'
+import { isoDaysFromNow, todayISO } from './lib'
+import { bookableDays } from './consult'
 
 const agoISO = (days: number) => new Date(Date.now() - days * 86400000).toISOString()
+
+const AVAILABILITY: Availability = { days: [1, 2, 3, 4, 5, 6], from: '09:00', to: '18:00', slotMins: 30 }
+
+// Seeded consultations are drawn from the *real* slot generator rather than
+// offset from now, so they always land inside the tailor's stated hours on a
+// working day — a demo opened at 11pm would otherwise show a 2am fitting call.
+const bookable = (dayIndex: number, slotIndex: number) => {
+  const days = bookableDays(AVAILABILITY, [])
+  const day = days[Math.min(dayIndex, days.length - 1)]
+  if (!day) return { date: todayISO(), time: '10:00' }
+  const slot = day.slots[Math.min(slotIndex, day.slots.length - 1)]
+  return { date: day.date, time: slot.time }
+}
 
 // Fresh seed every call: due dates are computed relative to "today" so the
 // demo always shows 1 overdue (red) + due-soon (amber) orders.
@@ -85,6 +99,17 @@ export function makeSeed(): Data {
           { templateId: 't-agbada', values: { neck: 15.5, shoulder: 17, chest: 40, 'sleeve length': 24, 'top length': 31, wrist: 10.5 } },
         ],
         createdAt: agoISO(10),
+      },
+      // Booked through the open link and not measured yet — the empty `sets` is
+      // the point: it's what the consultation call is for.
+      {
+        id: 'c-chidi',
+        name: 'Chidi Nwosu',
+        phone: '+2349023456781',
+        area: '',
+        gender: 'male',
+        sets: [],
+        createdAt: agoISO(0),
       },
     ],
     orders: [
@@ -234,6 +259,42 @@ export function makeSeed(): Data {
         createdAt: agoISO(1),
       },
     ],
+    consultations: [
+      {
+        id: 'k-1',
+        customerId: 'c-chidi',
+        name: 'Chidi Nwosu',
+        phone: '+2349023456781',
+        ...bookable(0, 0),
+        durationMins: 30,
+        channel: 'whatsapp',
+        link: '',
+        styleId: 'senator',
+        templateId: 't-agbada',
+        photo: '',
+        photoPending: true,
+        note: "It's for my brother's wedding in September.",
+        status: 'upcoming',
+        createdAt: agoISO(0),
+      },
+      {
+        id: 'k-2',
+        customerId: 'c-adaeze',
+        name: 'Bimbo Ademoye',
+        phone: '+2348031234567',
+        ...bookable(1, 6),
+        durationMins: 30,
+        channel: 'whatsapp',
+        link: '',
+        styleId: 'gown',
+        templateId: 't-gown',
+        photo: '',
+        photoPending: false,
+        note: 'Want to re-check my measurements, I have lost some weight.',
+        status: 'upcoming',
+        createdAt: agoISO(1),
+      },
+    ],
     settings: {
       businessName: 'Golden Thread Stitches',
       tagline: 'bespoke tailoring, Lagos',
@@ -242,6 +303,11 @@ export function makeSeed(): Data {
       accountNumber: '0123456789',
       accountName: 'Golden Thread Stitches',
       currency: '₦',
+      // Prefilled so a tailor can send a working booking link having configured
+      // nothing at all — Mon–Sat, 9 to 6, half-hour calls.
+      callChannel: 'whatsapp',
+      callLink: '',
+      availability: AVAILABILITY,
     },
     bannerDismissed: false,
   }

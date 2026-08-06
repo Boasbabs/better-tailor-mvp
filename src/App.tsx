@@ -12,6 +12,11 @@ import InvoiceNew from './pages/InvoiceNew'
 import InvoiceDetail from './pages/InvoiceDetail'
 import Settings from './pages/Settings'
 import TemplateEditor from './pages/TemplateEditor'
+import Consultations from './pages/Consultations'
+import ConsultDetail from './pages/ConsultDetail'
+import ConsultShare from './pages/ConsultShare'
+import ConsultBook from './pages/ConsultBook'
+import ConsultReview from './pages/ConsultReview'
 
 function Home() {
   return localStorage.getItem('bt_seen_welcome') ? <Navigate to="/orders" replace /> : <Welcome />
@@ -33,6 +38,13 @@ export default function App() {
         <Route path="/invoices" element={<Invoices />} />
         <Route path="/invoices/:id" element={<InvoiceDetail />} />
         <Route path="/invoice/new" element={<InvoiceNew />} />
+        {/* consultations — /book and /booked are the two halves of the
+            WhatsApp round trip and are the only routes a customer ever sees */}
+        <Route path="/consultations" element={<Consultations />} />
+        <Route path="/consultations/:id" element={<ConsultDetail />} />
+        <Route path="/consult/share" element={<ConsultShare />} />
+        <Route path="/book/:payload" element={<ConsultBook />} />
+        <Route path="/booked/:payload" element={<ConsultReview />} />
         <Route path="/settings" element={<Settings />} />
         {/* templates now live inline in settings; keep the old path working */}
         <Route path="/settings/templates" element={<Navigate to="/settings" replace />} />

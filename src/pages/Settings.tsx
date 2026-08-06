@@ -4,7 +4,9 @@ import { useStore } from '../store'
 import { SubShell } from '../components/shell'
 import { Confirm, FieldLabel, Icons, inputCls, useToast } from '../components/ui'
 import { CurrencyPicker } from '../components/CurrencyPicker'
-import { FORM_URL, trackWaitlist, uid } from '../lib'
+import { AvailabilityEditor } from '../components/consult'
+import { CHANNELS } from '../consult'
+import { FORM_URL, trackConsult, trackWaitlist, uid } from '../lib'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -72,6 +74,75 @@ export default function Settings() {
             {field('account number', 'accountNumber', '0123456789', 'numeric')}
             {field('account name', 'accountName', 'account holder name')}
           </div>
+        </div>
+
+        {/* fitting calls */}
+        <div>
+          <h2 className="font-display font-bold lowercase mb-1">fitting calls</h2>
+          <p className="text-[13px] text-ink/45 mb-3">
+            customers book a call from these hours, and you take their measurements together on it.
+          </p>
+
+          <div className="space-y-2">
+            {CHANNELS.map((c) => {
+              const on = settings.callChannel === c.id
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    saveSettings({ callChannel: c.id })
+                    trackConsult('channel-set')
+                  }}
+                  className={`w-full rounded-2xl p-4 text-left transition active:scale-[0.98] ${
+                    on ? 'bg-ink text-white' : 'bg-card shadow-sm'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={on ? 'text-white' : 'text-ink/40'}>
+                      {c.id === 'whatsapp' ? Icons.whatsapp('w-[18px] h-[18px]') : Icons.video('w-[18px] h-[18px]')}
+                    </span>
+                    <span className="font-bold text-sm">{c.name}</span>
+                    {on && <span className="ml-auto">{Icons.check()}</span>}
+                  </div>
+                  <div className={`text-xs mt-1 ${on ? 'text-white/60' : 'text-ink/45'}`}>{c.hint}</div>
+                </button>
+              )
+            })}
+          </div>
+
+          {settings.callChannel !== 'whatsapp' && (
+            <div className="mt-3">
+              <FieldLabel>your meeting room link</FieldLabel>
+              <input
+                className={inputCls}
+                placeholder={settings.callChannel === 'zoom' ? 'https://zoom.us/j/…' : 'https://meet.google.com/…'}
+                inputMode="url"
+                value={settings.callLink}
+                onChange={(e) => saveSettings({ callLink: e.target.value })}
+              />
+              <p className="text-[11px] text-ink/35 mt-2 ml-1">
+                use the same room every time — it goes out with every booking.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-3">
+            <AvailabilityEditor value={settings.availability} onChange={(availability) => saveSettings({ availability })} />
+          </div>
+
+          <button
+            onClick={() => navigate('/consult/share')}
+            className="mt-3 w-full bg-card rounded-2xl shadow-sm p-4 flex items-center gap-3 active:scale-[0.98] transition text-left"
+          >
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-card2 grid place-items-center text-ink/55">
+              {Icons.link('w-[18px] h-[18px]')}
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-sm lowercase">send a booking link</div>
+              <div className="text-xs text-ink/45">share it with one customer, or reuse one open link</div>
+            </div>
+            {Icons.chevron('w-5 h-5 text-ink/25 ml-auto shrink-0')}
+          </button>
         </div>
 
         {/* templates — listed inline so the tailor sees what they have

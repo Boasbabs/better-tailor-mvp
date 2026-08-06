@@ -150,7 +150,27 @@ export function track(event: 'opened' | 'engaged' | 'waitlist-click') {
   count(event)
 }
 
-export type WaitlistSource = 'orders' | 'customers' | 'invoices' | 'settings'
+// The consultation experiment gets its own namespace, and deliberately does not
+// fire `engaged` — the pre-experiment baseline has to stay comparable. Note that
+// `page-opened` and `booked` fire from the *customer's* browser, so pageviews
+// are no longer tailors-only.
+export type ConsultEvent = 'link-shared' | 'page-opened' | 'booked' | 'saved' | 'call-started' | 'channel-set'
+
+export function trackConsult(event: ConsultEvent) {
+  count(`consult/${event}`)
+}
+
+// Namespaced for the same reason consultations are: `opened` is the funnel
+// baseline and has to stay comparable across builds, so onboarding never fires
+// it twice. `template-added` fires once per template, which makes the event
+// count itself the answer to "how many do tailors define at signup?".
+export type OnboardEvent = 'template-added' | 'templates-skipped'
+
+export function trackOnboard(event: OnboardEvent) {
+  count(`onboard/${event}`)
+}
+
+export type WaitlistSource = 'orders' | 'calls' | 'customers' | 'invoices' | 'settings'
 
 // Fires the canonical funnel event *and* a per-surface breakdown. Keeping the
 // aggregate means the funnel number stays one row in GoatCounter instead of a
