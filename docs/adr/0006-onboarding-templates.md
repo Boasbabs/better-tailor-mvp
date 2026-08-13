@@ -3,8 +3,10 @@
 - **Status:** Built on web (`feat/consultation-booking`), in the working tree
   and not yet committed at the time of writing. Not yet built natively.
 - **Date:** 2026-08-05
-- **Screens:** no gallery yet — this is the one feature without a
-  `docs/screenshots/*` folder. §4 is written to stand on its own until there is.
+- **Screens:** [`docs/screenshots/onboarding-feat/`](../screenshots/onboarding-feat/)
+  — 19 frames off the running web build, every screen and state §4 describes.
+  §4 is still written to stand on its own; the frames are corroboration, not the
+  spec. Where a rule below has a frame, it is cited as **[N]**.
 - **Audience:** whoever (or whatever) builds this in SwiftUI and Jetpack Compose.
   Everything below is behaviour and rules, not React. Where the web made a
   choice for web reasons, that is called out so it is not copied.
@@ -104,13 +106,15 @@ Two rules follow, and both matter:
 
 **Currency is written on both paths out of step 2.** Skipping declines to name
 the shop, not to pick a currency — the picker defaults to something and the
-tailor has already seen it applied to the live invoice preview.
+tailor has already seen it applied to the live invoice preview **[05]**.
 
 **Step 3 writes nothing until it is left forwards.** Going *back* to step 2 must
 leave the store exactly as it was found, and the drafts must still be there on
 returning. This is why drafts are screen state and not model objects: a native
 port that binds the builder straight to SwiftData or Room will persist
 half-finished templates the moment a tailor taps back, and there is no undo.
+**[16]** is the return trip: name and currency intact, drafts intact, store
+untouched.
 
 **`businessName` also seeds `accountName`.** Small shops bank under their
 trading name, and an invoice whose header and "pay to" block disagree looks
@@ -150,7 +154,8 @@ Three consequences, all deliberate, all worth a test:
 
 **The card being edited is not rendered in the card list.** It lives in the form
 instead. Rendering both is a duplicate that invites the tailor to edit one copy
-and delete the other.
+and delete the other. Compare **[12]** (two cards, blank form) with **[14]**
+(one card left in the list, the other open in the form under `editing Kaftan`).
 
 **Field order is tap order, not chip order.** `fields` is appended to as chips
 are selected, so tapping chest → neck → armhole stores `[chest, neck, armhole]`
@@ -178,13 +183,13 @@ tailor's real vocabulary should reorder it.
 
 Chips **toggle in place** — unselected shows `+`, selected shows `✓` — rather
 than moving into a separate "added" list. A chip must never change position
-under the thumb that just tapped it.
+under the thumb that just tapped it. **[06]** all off, **[08]** five on.
 
 **Typed fields are lowercased and trimmed**, then appended to the same chip row
-after the fourteen, in insertion order. A custom field is therefore removable by
-exactly the gesture that removes a suggested one, which is the whole reason it
-joins the row instead of getting its own list. Adding a name that is already
-selected is a no-op, not an error and not a duplicate.
+after the fourteen, in insertion order **[09] → [10]**. A custom field is
+therefore removable by exactly the gesture that removes a suggested one, which
+is the whole reason it joins the row instead of getting its own list. Adding a
+name that is already selected is a no-op, not an error and not a duplicate.
 
 Field names are lowercase everywhere in this app. Garment **names** are not —
 `Ankara gown` keeps its capital, matching the seeded `Women's Gown`.
@@ -192,7 +197,9 @@ Field names are lowercase everywhere in this app. Garment **names** are not —
 ### 3.4 The five starters are never touched
 
 Whatever she builds is **prepended**; the shipped templates stay, in order,
-beneath hers. Onboarding has no delete.
+beneath hers. Onboarding has no delete. **[18]** is the settings list after
+building one `Kaftan`; **[19]** is the same list after skipping — five starters,
+unchanged, in the same order.
 
 This is not politeness. Seeded customers and orders hold `templateId`s pointing
 at those five, and a customer's saved measurement set is keyed by template
@@ -210,7 +217,9 @@ native port should keep them distinct rather than unify them.
 
 Step 3's `skip for now` renders **only while the screen is untouched** — no
 saved cards, no garment name, no selected fields. The moment anything is
-entered it disappears for the rest of the session.
+entered it disappears for the rest of the session. Present under `start` in
+**[06]**, gone in **[13]** — the same screen scrolled to its foot with two
+garments saved.
 
 A skip link sitting under two saved garments is lying about what it does: it
 would either discard them, which is destructive and unlabelled, or keep them,
@@ -227,8 +236,12 @@ On leaving step 3 by either path, in this order:
 2. Set the first-run flag.
 3. Fire `opened` **once** (§9), plus one `onboard/template-added` per committed
    template, or a single `onboard/templates-skipped` if none.
-4. Go to the orders list, **replacing** onboarding in the back stack. There is
-   no route back into the welcome flow.
+4. Go to the orders list **[17]**, **replacing** onboarding in the back stack.
+   There is no route back into the welcome flow.
+
+**[18]** and **[19]** are the two outcomes seen from settings afterwards: the
+`Kaftan` she built sitting above the five starters, and — from a second clean
+run through the skip path — the five starters alone.
 
 `opened` is the pre-existing funnel event and fires here whether or not
 templates were created. Do not fire it per template and do not fire it on step
@@ -248,11 +261,16 @@ demo data does not clear it, and clearing it does not touch her templates.
 
 ## 4. Screens
 
+Frames cited as **[N]** are in
+[`docs/screenshots/onboarding-feat/`](../screenshots/onboarding-feat/), captured
+at 390×844 @2x off the running web build. They show what the web does; where
+this section says the native build should differ, the frame is the *before*.
+
 All three are a single scrolling column, max width ~28rem, centred, with the
 primary action at the bottom of the content rather than pinned — the step-3
 screen is taller than a phone and a pinned bar would cover the chip grid.
 
-### 4.1 Step 1 — splash
+### 4.1 Step 1 — splash · **[01]**
 
 Wordmark in the display face at ~52pt over two lines → one-line value promise →
 a card of three features (measurements on file, due dates that nag you, invoices
@@ -262,7 +280,7 @@ that show balance), each an icon tile, a bold title and a muted line → `let's 
 **No step counter and no back affordance.** This screen is a pitch, not a form,
 and numbering it invites the reader to count how much work is coming.
 
-### 4.2 Step 2 — make it yours
+### 4.2 Step 2 — make it yours · **[03] [04] [05]**
 
 Back button and `2 / 3` on one row → heading `make it yours` → a line explaining
 that both fields land on every invoice and are changeable later → business name
@@ -271,9 +289,19 @@ that both fields land on every invoice and are changeable later → business nam
 
 The preview is the payoff and the reason this step is second rather than last:
 it shows the shop name and a `₦25,000` balance in the real invoice styling as
-the tailor types. It is why she is willing to do step 3 at all.
+the tailor types **[04]**. It is why she is willing to do step 3 at all. With
+the field empty the preview falls back to `your shop name` rather than rendering
+a blank header **[03]** — a native port must keep that fallback, because the
+preview is on screen before anything has been typed into it.
 
-### 4.3 Step 3 — what do you measure?
+The currency cells are equal-width so the three-character `GH₵` does not stretch
+its pill out of step with the single-character ones **[05]**.
+
+> **[02] is a prototype artifact, not a spec.** The web build seeds demo data,
+> including `businessName`, so step 2 opens prefilled. A native build shipping
+> without seed data opens on **[03]**. Do not port the prefill.
+
+### 4.3 Step 3 — what do you measure? · **[06]–[15]**
 
 Back button and `3 / 3` → heading `what do you measure?` → an explanation that
 names a garment and its sizes and states the payoff ("every order for that
@@ -281,23 +309,30 @@ garment will ask for exactly these") → **saved cards** → **the form** → th
 button → `start` → `skip for now`, conditionally (§3.5).
 
 **Saved card.** A ruler tile, the garment name in bold, and its fields joined by
-`·` on one muted line, truncated. The card body is one tap target that opens it
-in the form; a separate `✕` at the trailing edge removes it. Two targets, not a
-tap-and-hold, because destructive gestures should be visible.
+`·` on one muted line, truncated **[12]**. The card body is one tap target that
+opens it in the form; a separate `✕` at the trailing edge removes it. Two
+targets, not a tap-and-hold, because destructive gestures should be visible.
+Removal is immediate and unconfirmed **[15]** — correct here, because nothing
+has been persisted yet, and deliberately *unlike* the confirm dialogs everywhere
+else in the app.
 
-**The form.** A field label that reads `garment` normally and
-`editing {garment name}` while bound to a card — this label is the only thing
-telling the tailor which mode she is in, and it must change. Then the name box
+**The form.** A field label that reads `garment` normally **[07]** and
+`editing {garment name}` while bound to a card **[14]** — this label is the only
+thing telling the tailor which mode she is in, and it must change. Then the name box
 (placeholder `e.g. Kaftan`), then the chip grid, then a text box
 (`or type your own…`) with an `add` button, disabled while empty and also
 committed by the keyboard's return key.
 
 **The save button** is secondary styling, disabled unless the form is ready
-(§3.2), and reads `save & add another` or `save changes` depending on mode.
+(§3.2) — **[07]** is the disabled state, a garment named with no fields yet —
+and reads `save & add another` **[08]** or `save changes` **[14]** depending on
+mode.
 
-**The primary button** reads `start`, gaining ` · 1 template` / ` · 2 templates`
-when there is anything to commit. The count includes an unsaved-but-ready form,
-so it always matches what tapping it will actually do.
+**The primary button** reads `start` **[06]**, gaining ` · 1 template` /
+` · 2 templates` **[13]** when there is anything to commit. The count includes an
+unsaved-but-ready form — **[09]** and **[10]** read `start · 1 template` with
+nothing saved and only the open form — so it always matches what tapping it will
+actually do.
 
 ---
 
